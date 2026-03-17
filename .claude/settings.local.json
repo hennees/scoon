@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /Users/patrickhennes/Developer/ScoonMobile -type f ! -path */.git/* ! -path *.xcodeproj/*)"
+    ]
+  }
+}
