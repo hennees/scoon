@@ -122,7 +122,7 @@ struct HomeScreen: View {
                                 HStack(spacing: 14) {
                                     ForEach(vm.filteredSpots) { spot in
                                         SpotCardView(spot: spot) {
-                                            router.navigate(to: .placeInfo)
+                                            router.navigate(to: .placeInfo(spot))
                                         }
                                     }
                                 }
@@ -137,10 +137,20 @@ struct HomeScreen: View {
                 }
             }
 
+            // Error banner (floats above NavBar)
+            if let vm, let error = vm.error {
+                VStack {
+                    Spacer()
+                    ErrorBanner(message: error) { Task { await vm.onAppear() } }
+                        .padding(.bottom, 90)
+                }
+            }
+
             NavBarView(selectedTab: $selectedTab)
         }
         .navigationBarHidden(true)
         .task {
+            router.markHomeDepth()
             let viewModel = container.makeHomeViewModel()
             vm = viewModel
             await viewModel.onAppear()

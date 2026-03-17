@@ -110,10 +110,10 @@ private struct TransactionCard: View {
             VStack(alignment: .trailing, spacing: 8) {
                 Text(transaction.status.rawValue)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(Color(red: 0.85, green: 0.65, blue: 0.0))
+                    .foregroundColor(transaction.status.uiColor)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
-                    .background(Color(red: 0.85, green: 0.65, blue: 0.0).opacity(0.15))
+                    .background(transaction.status.uiColor.opacity(0.15))
                     .cornerRadius(6)
                 Button(action: {}) {
                     Text("Zeig Details")
@@ -121,14 +121,32 @@ private struct TransactionCard: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 6)
-                        .background(Color(red: 0.85, green: 0.65, blue: 0.0).opacity(0.3))
+                        .background(transaction.status.uiColor.opacity(0.25))
                         .clipShape(Capsule())
                 }
             }
         }
         .padding(16)
-        .background(Color.scoonDark)
-        .cornerRadius(14)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color.white.opacity(0.07), lineWidth: 1)
+                )
+        )
+    }
+}
+
+// MARK: – Status Color
+
+private extension TransactionStatus {
+    var uiColor: Color {
+        switch self {
+        case .paid:    return Color(red: 0.2,  green: 0.8,  blue: 0.4)
+        case .pending: return Color(red: 0.85, green: 0.65, blue: 0.0)
+        case .failed:  return Color.red
+        }
     }
 }
 

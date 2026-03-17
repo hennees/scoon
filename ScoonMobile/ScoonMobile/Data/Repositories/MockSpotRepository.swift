@@ -78,6 +78,26 @@ final class MockSpotRepository: SpotRepositoryProtocol {
         }
     }
 
+    func createSpot(_ draft: SpotDraft) async throws -> Spot {
+        try await Task.sleep(for: .seconds(simulatedDelay))
+        let newSpot = Spot(
+            id:          UUID(),
+            name:        draft.name,
+            location:    draft.location,
+            rating:      0.0,
+            imageURL:    draft.imageURLs.first ?? "",
+            isFavorite:  false,
+            description: draft.description,
+            viewCount:   0,
+            likeCount:   0,
+            saveCount:   0,
+            distance:    nil,
+            category:    draft.category
+        )
+        spots.append(newSpot)
+        return newSpot
+    }
+
     func toggleFavorite(spotID: UUID) async throws {
         try await Task.sleep(for: .seconds(simulatedDelay))
         guard let index = spots.firstIndex(where: { $0.id == spotID }) else { return }

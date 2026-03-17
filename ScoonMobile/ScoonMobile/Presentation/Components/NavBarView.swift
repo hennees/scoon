@@ -6,6 +6,7 @@ enum NavTab {
 
 struct NavBarView: View {
     @Binding var selectedTab: NavTab
+    @Environment(AppRouter.self) private var router
 
     private let items: [(icon: String, tab: NavTab)] = [
         ("house.fill",  .home),
@@ -17,7 +18,12 @@ struct NavBarView: View {
     var body: some View {
         HStack(spacing: 0) {
             ForEach(items, id: \.tab.hashValue) { item in
-                NavBarItem(systemIcon: item.icon, tab: item.tab, selected: $selectedTab)
+                NavBarItem(
+                    systemIcon: item.icon,
+                    tab: item.tab,
+                    selected: $selectedTab,
+                    onNavigate: { router.switchTab(to: item.tab) }
+                )
             }
         }
         .padding(.horizontal, 16)
@@ -46,6 +52,7 @@ private struct NavBarItem: View {
     let systemIcon: String
     let tab:        NavTab
     @Binding var selected: NavTab
+    let onNavigate: () -> Void
 
     var isSelected: Bool { selected == tab }
 
@@ -54,6 +61,7 @@ private struct NavBarItem: View {
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 selected = tab
             }
+            onNavigate()
         }) {
             ZStack {
                 // Active pill background

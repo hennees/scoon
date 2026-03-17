@@ -16,10 +16,19 @@ struct KartenansichtDetailScreen: View {
 
     private let categories = ["Park & Garten", "Ausstellungen", "Denkmäler"]
 
-    private let nearbySpots: [NearbySpot] = [
-        NearbySpot(name: "Uhrturm",      distance: "0.3 km", imageURL: "https://www.figma.com/api/mcp/asset/4c92510c-b715-4ba9-b560-fb389c098aad"),
-        NearbySpot(name: "Haker-Löwe",   distance: "0.7 km", imageURL: "https://www.figma.com/api/mcp/asset/5c2eff61-1398-46d1-b246-219c24477e45"),
-        NearbySpot(name: "Blumenwiese",  distance: "1.2 km", imageURL: "https://www.figma.com/api/mcp/asset/ad0ee92b-65cd-4acb-804a-51f27ccd4685"),
+    private let nearbySpots: [Spot] = [
+        Spot(id: UUID(), name: "Uhrturm",     location: "Graz, Austria", rating: 4.7,
+             imageURL: "https://www.figma.com/api/mcp/asset/4c92510c-b715-4ba9-b560-fb389c098aad",
+             isFavorite: false, description: "Der Uhrturm ist das Wahrzeichen von Graz.",
+             viewCount: 980, likeCount: 310, saveCount: 140, distance: "0.3 km", category: .monuments),
+        Spot(id: UUID(), name: "Haker-Löwe",  location: "Graz, Austria", rating: 4.5,
+             imageURL: "https://www.figma.com/api/mcp/asset/5c2eff61-1398-46d1-b246-219c24477e45",
+             isFavorite: false, description: "Historisches Stadtzentrum mit beeindruckender Architektur.",
+             viewCount: 420, likeCount: 180, saveCount: 60, distance: "0.7 km", category: .architecture),
+        Spot(id: UUID(), name: "Blumenwiese", location: "Graz, Austria", rating: 4.3,
+             imageURL: "https://www.figma.com/api/mcp/asset/ad0ee92b-65cd-4acb-804a-51f27ccd4685",
+             isFavorite: false, description: "Wunderschöne Wiese ideal für Naturfotos.",
+             viewCount: 210, likeCount: 95, saveCount: 38, distance: "1.2 km", category: .nature),
     ]
 
     var body: some View {
@@ -41,7 +50,7 @@ struct KartenansichtDetailScreen: View {
                     HStack(spacing: 12) {
                         ForEach(nearbySpots) { spot in
                             NearbySpotCard(spot: spot) {
-                                router.navigate(to: .placeInfo)
+                                router.navigate(to: .placeInfo(spot))
                             }
                         }
                     }
@@ -81,15 +90,8 @@ struct KartenansichtDetailScreen: View {
     }
 }
 
-private struct NearbySpot: Identifiable {
-    let id = UUID()
-    let name: String
-    let distance: String
-    let imageURL: String
-}
-
 private struct NearbySpotCard: View {
-    let spot: NearbySpot
+    let spot: Spot
     let onTap: () -> Void
 
     var body: some View {
@@ -98,23 +100,32 @@ private struct NearbySpotCard: View {
                 AsyncImage(url: URL(string: spot.imageURL)) { phase in
                     switch phase {
                     case .success(let img): img.resizable().scaledToFill()
-                    default: Rectangle().fill(Color.gray.opacity(0.3))
+                    default: Rectangle().fill(Color.white.opacity(0.06))
                     }
                 }
                 .frame(width: 140, height: 110)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
+
+                LinearGradient(
+                    colors: [.clear, .black.opacity(0.65)],
+                    startPoint: .top, endPoint: .bottom
+                )
                 .clipShape(RoundedRectangle(cornerRadius: 14))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(spot.name)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.white)
-                    Text(spot.distance)
-                        .font(.system(size: 11))
-                        .foregroundColor(.white.opacity(0.7))
+                    if let distance = spot.distance {
+                        Text(distance)
+                            .font(.system(size: 11))
+                            .foregroundColor(.white.opacity(0.7))
+                    }
                 }
                 .padding(.horizontal, 8)
                 .padding(.bottom, 8)
             }
         }
+        .buttonStyle(.plain)
     }
 }

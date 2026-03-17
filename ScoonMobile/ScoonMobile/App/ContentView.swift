@@ -38,7 +38,7 @@ struct ContentView: View {
         case .signUpEmail:       SignUpEmailScreen()
         case .login:             LoginScreen()
         case .home:              HomeScreen()
-        case .placeInfo:         PlaceInfoScreen()
+        case .placeInfo(let spot): PlaceInfoScreen(spot: spot)
         case .ortAuswahl:        OrtAuswahlScreen()
         case .kartenansicht:     KartenansichtScreen()
         case .kartenansichtDetail: KartenansichtDetailScreen()

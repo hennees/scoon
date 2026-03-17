@@ -7,7 +7,7 @@ enum AppRoute: Hashable {
     case signUpEmail         // Sign Up 2 – light-card email form
     case login               // Log In 1
     case home
-    case placeInfo
+    case placeInfo(Spot)
     case ortAuswahl
     case kartenansicht       // Map view with pins
     case kartenansichtDetail // Map view + bottom sheet with spot cards
