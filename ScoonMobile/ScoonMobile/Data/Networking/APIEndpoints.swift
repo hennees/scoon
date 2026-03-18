@@ -24,6 +24,8 @@ enum APIEndpoints {
         static let list      = "/rest/v1/spots_with_favorites"
         /// POST to add a new spot (use /rest/v1/spots – not the view)
         static let create    = "/rest/v1/spots"
+        /// POST RPC for distance-based nearby search
+        static let nearbyRPC = "/rest/v1/rpc/get_nearby_spots"
     }
 
     enum Favorites {

@@ -108,7 +108,7 @@ struct MainTabView: View {
         case .settings:                 SettingsScreen()
         case .addPhotoSpot:             AddPhotoSpotScreen()
         case .kartenansicht:            KartenansichtScreen()
-        case .kartenansichtDetail:      KartenansichtDetailScreen()
+        case .kartenansichtDetail:      KartenansichtScreen()
         case .insights:                 InsightsScreen()
         case .einnahmen:                EinnahmenScreen()
         case .transaktionen:            TransaktionenScreen()

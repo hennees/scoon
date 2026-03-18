@@ -15,5 +15,7 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Wir nutzen deinen Standort, um Fotospots in deiner Naehe anzuzeigen.</string>
 </dict>
 </plist>

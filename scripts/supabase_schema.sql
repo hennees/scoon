@@ -137,3 +137,93 @@ CREATE INDEX spots_rating_idx     ON public.spots (rating DESC);
 CREATE INDEX spots_creator_idx    ON public.spots (creator_id);
 CREATE INDEX favorites_user_idx   ON public.favorites (user_id);
 CREATE INDEX transactions_creator ON public.transactions (creator_id);
+
+-- ============================================================
+-- RPC: Nearby spots with distance ordering
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.get_nearby_spots(
+    user_lat DOUBLE PRECISION,
+    user_lon DOUBLE PRECISION,
+    radius_meters DOUBLE PRECISION DEFAULT 2500
+)
+RETURNS TABLE (
+    id UUID,
+    name TEXT,
+    location TEXT,
+    rating DOUBLE PRECISION,
+    image_url TEXT,
+    is_favorite BOOLEAN,
+    description TEXT,
+    view_count INT,
+    like_count INT,
+    save_count INT,
+    distance TEXT,
+    category TEXT,
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION
+)
+LANGUAGE sql
+STABLE
+SECURITY INVOKER
+AS $$
+    SELECT
+        s.id,
+        s.name,
+        s.location,
+        s.rating,
+        s.image_url,
+        EXISTS (
+            SELECT 1
+            FROM public.favorites f
+            WHERE f.spot_id = s.id AND f.user_id = auth.uid()
+        ) AS is_favorite,
+        s.description,
+        s.view_count,
+        s.like_count,
+        s.save_count,
+        CONCAT(
+            ROUND(
+                (
+                    (
+                        6371000 * ACOS(
+                            LEAST(
+                                1,
+                                COS(RADIANS(user_lat)) * COS(RADIANS(s.latitude)) *
+                                COS(RADIANS(s.longitude) - RADIANS(user_lon)) +
+                                SIN(RADIANS(user_lat)) * SIN(RADIANS(s.latitude))
+                            )
+                        )
+                    ) / 1000.0
+                )::numeric,
+                1
+            ),
+            ' km'
+        ) AS distance,
+        s.category,
+        s.latitude,
+        s.longitude
+    FROM public.spots s
+    WHERE s.latitude IS NOT NULL
+      AND s.longitude IS NOT NULL
+      AND (
+        6371000 * ACOS(
+            LEAST(
+                1,
+                COS(RADIANS(user_lat)) * COS(RADIANS(s.latitude)) *
+                COS(RADIANS(s.longitude) - RADIANS(user_lon)) +
+                SIN(RADIANS(user_lat)) * SIN(RADIANS(s.latitude))
+            )
+        )
+      ) <= radius_meters
+    ORDER BY
+        6371000 * ACOS(
+            LEAST(
+                1,
+                COS(RADIANS(user_lat)) * COS(RADIANS(s.latitude)) *
+                COS(RADIANS(s.longitude) - RADIANS(user_lon)) +
+                SIN(RADIANS(user_lat)) * SIN(RADIANS(s.latitude))
+            )
+        ) ASC;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.get_nearby_spots(DOUBLE PRECISION, DOUBLE PRECISION, DOUBLE PRECISION) TO authenticated;

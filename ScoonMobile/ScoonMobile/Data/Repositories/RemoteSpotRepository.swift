@@ -15,6 +15,12 @@ private struct FavoritePayload: Encodable {
     let spotId: String
 }
 
+private struct NearbySpotsPayload: Encodable {
+    let userLat: Double
+    let userLon: Double
+    let radiusMeters: Double
+}
+
 final class RemoteSpotRepository: SpotRepositoryProtocol {
     private let apiClient:    APIClientProtocol
     private let sessionStore: AuthSessionStore
@@ -67,16 +73,16 @@ final class RemoteSpotRepository: SpotRepositoryProtocol {
         return dtos.map(SpotMapper.map)
     }
 
-    func fetchNearbySpots() async throws -> [Spot] {
-        // PostgREST doesn't support distance ordering natively without PostGIS RPC.
-        // For now, return all spots ordered by rating. Real geo-query via RPC is next.
+    func fetchNearbySpots(latitude: Double, longitude: Double, radiusMeters: Double) async throws -> [Spot] {
+        let payload = NearbySpotsPayload(
+            userLat: latitude,
+            userLon: longitude,
+            radiusMeters: radiusMeters
+        )
         let request = APIRequest(
-            method:       .get,
-            path:         APIEndpoints.Spots.list,
-            queryItems:   [
-                URLQueryItem(name: "select", value: "*"),
-                URLQueryItem(name: "order",  value: "rating.desc")
-            ],
+            method:       .post,
+            path:         APIEndpoints.Spots.nearbyRPC,
+            body:         try payload.asJSONData(),
             requiresAuth: true
         )
         let dtos = try await apiClient.send(request, as: [SpotDTO].self)

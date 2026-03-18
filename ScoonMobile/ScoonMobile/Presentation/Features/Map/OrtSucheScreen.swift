@@ -1,5 +1,9 @@
 import SwiftUI
 
+extension Notification.Name {
+    static let mapCitySelected = Notification.Name("scoon.mapCitySelected")
+}
+
 // Design: 557:424 – Ort Suche
 // Dark top + light bottom sheet with city list grouped by country.
 struct OrtSucheScreen: View {
@@ -11,6 +15,17 @@ struct OrtSucheScreen: View {
         ("Österreich", ["Wien", "Graz", "Linz", "Salzburg", "Innsbruck"]),
         ("Deutschland", ["Hamburg", "Frankfurt"]),
         ("Schweiz",    ["Zürich"]),
+    ]
+
+    private let cityCoordinates: [String: (Double, Double)] = [
+        "Wien": (48.2082, 16.3738),
+        "Graz": (47.0707, 15.4395),
+        "Linz": (48.3069, 14.2858),
+        "Salzburg": (47.8095, 13.0550),
+        "Innsbruck": (47.2692, 11.4041),
+        "Hamburg": (53.5511, 9.9937),
+        "Frankfurt": (50.1109, 8.6821),
+        "Zürich": (47.3769, 8.5417)
     ]
 
     var body: some View {
@@ -63,6 +78,7 @@ struct OrtSucheScreen: View {
 
                 // In der Nähe
                 CityRow(name: "In der Nähe", icon: "location.fill") {
+                    NotificationCenter.default.post(name: .mapCitySelected, object: nil)
                     router.navigateBack()
                 }
                 .padding(.top, 10)
@@ -80,6 +96,13 @@ struct OrtSucheScreen: View {
 
                             ForEach(group.list, id: \.self) { city in
                                 CityRow(name: city, icon: "mappin") {
+                                    if let coordinate = cityCoordinates[city] {
+                                        NotificationCenter.default.post(
+                                            name: .mapCitySelected,
+                                            object: nil,
+                                            userInfo: ["lat": coordinate.0, "lon": coordinate.1]
+                                        )
+                                    }
                                     router.navigateBack()
                                 }
                                 if city != group.list.last {

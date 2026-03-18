@@ -74,6 +74,7 @@ final class AppContainer {
     // MARK: – Use Case factories
 
     var fetchSpotsUseCase:        FetchSpotsUseCase        { FetchSpotsUseCase(repository: spotRepository) }
+    var fetchNearbySpotsUseCase:  FetchNearbySpotsUseCase  { FetchNearbySpotsUseCase(repository: spotRepository) }
     var createSpotUseCase:        CreateSpotUseCase        { CreateSpotUseCase(repository: spotRepository) }
     var fetchFavoritesUseCase:    FetchFavoritesUseCase    { FetchFavoritesUseCase(repository: spotRepository) }
     var toggleFavoriteUseCase:    ToggleFavoriteUseCase    { ToggleFavoriteUseCase(repository: spotRepository) }
@@ -92,7 +93,9 @@ final class AppContainer {
     func makeInsightsViewModel()      -> InsightsViewModel      { InsightsViewModel(fetchInsights: fetchInsightsUseCase, fetchProfile: fetchProfileUseCase) }
     func makeEinnahmenViewModel()     -> EinnahmenViewModel     { EinnahmenViewModel(fetchTransactions: fetchTransactionsUseCase) }
     func makeTransaktionenViewModel() -> TransaktionenViewModel { TransaktionenViewModel(fetchTransactions: fetchTransactionsUseCase) }
-    func makeMapViewModel()           -> MapViewModel           { MapViewModel(fetchSpots: fetchSpotsUseCase) }
+    func makeMapViewModel()           -> MapViewModel           {
+        MapViewModel(fetchSpots: fetchSpotsUseCase, fetchNearbySpots: fetchNearbySpotsUseCase)
+    }
     func makeAddPhotoToSpotViewModel(spot: Spot) -> AddPhotoToSpotViewModel {
         AddPhotoToSpotViewModel(spot: spot, spotRepository: spotRepository, uploadService: imageUploadService)
     }

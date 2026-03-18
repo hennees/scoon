@@ -47,7 +47,7 @@ final class MockSpotRepository: SpotRepositoryProtocol {
         return spots.filter { $0.isFavorite }
     }
 
-    func fetchNearbySpots() async throws -> [Spot] {
+    func fetchNearbySpots(latitude: Double, longitude: Double, radiusMeters: Double) async throws -> [Spot] {
         try await Task.sleep(for: .seconds(simulatedDelay))
         let mockDistances = ["0.3 km", "0.7 km", "1.2 km"]
         return spots.enumerated().map { i, spot in
