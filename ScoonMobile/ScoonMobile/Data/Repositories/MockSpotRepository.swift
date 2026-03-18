@@ -4,6 +4,9 @@ final class MockSpotRepository: SpotRepositoryProtocol {
 
     var simulatedDelay: Double = 0.4
 
+    /// A stable UUID representing the mock logged-in user — used to simulate "Meine Orte".
+    static let mockUserID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+
     private var spots: [Spot] = [
         Spot(
             id: UUID(), name: "Murinsel", location: "Graz, Austria",
@@ -13,7 +16,8 @@ final class MockSpotRepository: SpotRepositoryProtocol {
             description: "Die Murinsel ist ein architektonisches Highlight inmitten der Stadt Graz – eine schwimmende Plattform auf der Mur.",
             viewCount: 1420, likeCount: 135, saveCount: 67,
             distance: nil, category: .architecture,
-            latitude: 47.0708, longitude: 15.4386
+            latitude: 47.0708, longitude: 15.4386,
+            creatorId: UUID(uuidString: "00000000-0000-0000-0000-000000000001")
         ),
         Spot(
             id: UUID(), name: "Stadtpark", location: "Graz, Austria",
@@ -23,7 +27,8 @@ final class MockSpotRepository: SpotRepositoryProtocol {
             description: "Ruhige Grünanlage im Herzen der Stadt mit wunderschönen alten Bäumen.",
             viewCount: 823, likeCount: 425, saveCount: 167,
             distance: nil, category: .parkGarden,
-            latitude: 47.0749, longitude: 15.4415
+            latitude: 47.0749, longitude: 15.4415,
+            creatorId: nil
         ),
         Spot(
             id: UUID(), name: "Schlossberg", location: "Graz, Austria",
@@ -33,7 +38,8 @@ final class MockSpotRepository: SpotRepositoryProtocol {
             description: "Der markante Hausberg von Graz mit Uhrturm und Panoramablick über die Stadt.",
             viewCount: 2100, likeCount: 890, saveCount: 340,
             distance: nil, category: .urban,
-            latitude: 47.0726, longitude: 15.4387
+            latitude: 47.0726, longitude: 15.4387,
+            creatorId: nil
         ),
     ]
 
@@ -57,7 +63,8 @@ final class MockSpotRepository: SpotRepositoryProtocol {
                  likeCount: spot.likeCount, saveCount: spot.saveCount,
                  distance: mockDistances[i % mockDistances.count],
                  category: spot.category,
-                 latitude: spot.latitude, longitude: spot.longitude)
+                 latitude: spot.latitude, longitude: spot.longitude,
+                 creatorId: spot.creatorId)
         }
     }
 
@@ -69,7 +76,8 @@ final class MockSpotRepository: SpotRepositoryProtocol {
             isFavorite: false, description: draft.description,
             viewCount: 0, likeCount: 0, saveCount: 0,
             distance: nil, category: draft.category,
-            latitude: nil, longitude: nil
+            latitude: nil, longitude: nil,
+            creatorId: MockSpotRepository.mockUserID
         )
         spots.append(newSpot)
         return newSpot
@@ -84,11 +92,17 @@ final class MockSpotRepository: SpotRepositoryProtocol {
                         description: s.description, viewCount: s.viewCount,
                         likeCount: s.likeCount, saveCount: s.saveCount,
                         distance: s.distance, category: s.category,
-                        latitude: s.latitude, longitude: s.longitude)
+                        latitude: s.latitude, longitude: s.longitude,
+                        creatorId: s.creatorId)
     }
 
     func addPhotosToSpot(spotID: UUID, imageURLs: [String]) async throws {
         try await Task.sleep(for: .seconds(simulatedDelay))
         // Mock: no-op — photos are tracked in-memory via SpotPhoto model
+    }
+
+    func fetchSpotsByCreator(userId: UUID) async throws -> [Spot] {
+        try await Task.sleep(for: .seconds(simulatedDelay))
+        return spots.filter { $0.creatorId == userId }
     }
 }

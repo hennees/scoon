@@ -16,7 +16,8 @@ enum SpotMapper {
             distance:    dto.distance,
             category:    SpotCategory(rawValue: dto.category) ?? .urban,
             latitude:    dto.latitude,
-            longitude:   dto.longitude
+            longitude:   dto.longitude,
+            creatorId:   dto.creatorId.flatMap(UUID.init(uuidString:))
         )
     }
 }

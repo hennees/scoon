@@ -19,10 +19,12 @@ final class FavoritesViewModel {
 
     private let fetchFavorites: FetchFavoritesUseCase
     private let toggleFavorite: ToggleFavoriteUseCase
+    private let fetchMySpots:   FetchMySpotsUseCase
 
-    init(fetchFavorites: FetchFavoritesUseCase, toggleFavorite: ToggleFavoriteUseCase) {
+    init(fetchFavorites: FetchFavoritesUseCase, toggleFavorite: ToggleFavoriteUseCase, fetchMySpots: FetchMySpotsUseCase) {
         self.fetchFavorites = fetchFavorites
         self.toggleFavorite = toggleFavorite
+        self.fetchMySpots   = fetchMySpots
     }
 
     var sortedFavorites: [Spot] { sorted(favorites) }
@@ -30,7 +32,9 @@ final class FavoritesViewModel {
 
     func onAppear() async {
         guard favorites.isEmpty else { return }
-        await load()
+        async let favoritesLoad: Void = load()
+        async let mySpotsLoad:   Void = loadMySpots()
+        _ = await (favoritesLoad, mySpotsLoad)
     }
 
     func toggle(spot: Spot) {
@@ -45,7 +49,17 @@ final class FavoritesViewModel {
     }
 
     func refresh() async {
-        await load()
+        async let favoritesLoad: Void = load()
+        async let mySpotsLoad:   Void = loadMySpots()
+        _ = await (favoritesLoad, mySpotsLoad)
+    }
+
+    func loadMySpots() async {
+        do {
+            mySpots = try await fetchMySpots.execute()
+        } catch {
+            self.error = error.localizedDescription
+        }
     }
 
     private func load() async {

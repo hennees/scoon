@@ -17,6 +17,7 @@ struct Spot: Identifiable, Hashable {
     let category:    SpotCategory
     let latitude:    Double?   // nil for spots without GPS data yet
     let longitude:   Double?
+    let creatorId:   UUID?
 }
 
 enum SpotCategory: String, CaseIterable, Hashable {

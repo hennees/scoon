@@ -7,6 +7,7 @@ protocol SpotRepositoryProtocol {
     func toggleFavorite(spotID: UUID) async throws
     func createSpot(_ draft: SpotDraft) async throws -> Spot
     func addPhotosToSpot(spotID: UUID, imageURLs: [String]) async throws
+    func fetchSpotsByCreator(userId: UUID) async throws -> [Spot]
 }
 
 /// Value type used when creating a new spot (no id yet — assigned by backend).

@@ -78,6 +78,7 @@ final class AppContainer {
     var createSpotUseCase:        CreateSpotUseCase        { CreateSpotUseCase(repository: spotRepository) }
     var fetchFavoritesUseCase:    FetchFavoritesUseCase    { FetchFavoritesUseCase(repository: spotRepository) }
     var toggleFavoriteUseCase:    ToggleFavoriteUseCase    { ToggleFavoriteUseCase(repository: spotRepository) }
+    var fetchMySpotsUseCase:      FetchMySpotsUseCase      { FetchMySpotsUseCase(repository: spotRepository, authRepository: authRepository) }
     var fetchProfileUseCase:      FetchUserProfileUseCase  { FetchUserProfileUseCase(repository: userRepository) }
     var fetchInsightsUseCase:     FetchInsightsUseCase     { FetchInsightsUseCase(repository: userRepository) }
     var fetchTransactionsUseCase: FetchTransactionsUseCase { FetchTransactionsUseCase(repository: transactionRepository) }
@@ -88,7 +89,7 @@ final class AppContainer {
     func makeAuthViewModel()          -> AuthViewModel          { AuthViewModel(authRepository: authRepository) }
     func makeAddSpotViewModel()       -> AddSpotViewModel       { AddSpotViewModel(createSpot: createSpotUseCase, uploadService: imageUploadService) }
     func makeHomeViewModel()          -> HomeViewModel          { HomeViewModel(fetchSpots: fetchSpotsUseCase) }
-    func makeFavoritesViewModel()     -> FavoritesViewModel     { FavoritesViewModel(fetchFavorites: fetchFavoritesUseCase, toggleFavorite: toggleFavoriteUseCase) }
+    func makeFavoritesViewModel()     -> FavoritesViewModel     { FavoritesViewModel(fetchFavorites: fetchFavoritesUseCase, toggleFavorite: toggleFavoriteUseCase, fetchMySpots: fetchMySpotsUseCase) }
     func makeProfileViewModel()       -> ProfileViewModel       { ProfileViewModel(fetchProfile: fetchProfileUseCase) }
     func makeInsightsViewModel()      -> InsightsViewModel      { InsightsViewModel(fetchInsights: fetchInsightsUseCase, fetchProfile: fetchProfileUseCase) }
     func makeEinnahmenViewModel()     -> EinnahmenViewModel     { EinnahmenViewModel(fetchTransactions: fetchTransactionsUseCase) }

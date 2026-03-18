@@ -18,4 +18,5 @@ struct SpotDTO: Codable {
     let category:    String
     let latitude:    Double?
     let longitude:   Double?
+    let creatorId:   String?
 }

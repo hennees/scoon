@@ -68,7 +68,10 @@ final class MockAuthRepository: AuthRepositoryProtocol {
         try await Task.sleep(for: .seconds(0.3))
     }
 
-    func currentUser() async -> User? { nil }
+    func currentUser() async -> User? {
+        User(id: MockSpotRepository.mockUserID, username: "demo_user", email: "demo@scoon.app",
+             bio: "", avatarURL: "", postCount: 1, followerCount: 0, followingCount: 0, isCreator: false)
+    }
 
     func resetPassword(email: String) async throws {
         try await Task.sleep(for: .seconds(1.0))

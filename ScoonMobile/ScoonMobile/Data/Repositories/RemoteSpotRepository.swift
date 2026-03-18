@@ -163,6 +163,21 @@ final class RemoteSpotRepository: SpotRepositoryProtocol {
         // Stub: image URLs are stored in a `spot_photos` table when backend supports it.
         // For now, a no-op so the remote mode doesn't crash.
     }
+
+    func fetchSpotsByCreator(userId: UUID) async throws -> [Spot] {
+        let request = APIRequest(
+            method:       .get,
+            path:         APIEndpoints.Spots.list,
+            queryItems:   [
+                URLQueryItem(name: "creator_id", value: "eq.\(userId.uuidString)"),
+                URLQueryItem(name: "select",     value: "*"),
+                URLQueryItem(name: "order",      value: "created_at.desc")
+            ],
+            requiresAuth: true
+        )
+        let dtos = try await apiClient.send(request, as: [SpotDTO].self)
+        return dtos.map(SpotMapper.map)
+    }
 }
 
 private struct SpotIDDTO: Decodable {
