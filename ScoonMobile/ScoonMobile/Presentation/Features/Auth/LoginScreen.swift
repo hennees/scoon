@@ -4,7 +4,8 @@ struct LoginScreen: View {
     @Environment(AppRouter.self)    private var router
     @Environment(AppContainer.self) private var container
     @State private var vm: AuthViewModel?
-    @State private var appeared = false
+    @State private var appeared   = false
+    @State private var showReset  = false
 
     var body: some View {
         ZStack {
@@ -63,7 +64,7 @@ struct LoginScreen: View {
                         // Forgot password
                         HStack {
                             Spacer()
-                            Button(action: {}) {
+                            Button(action: { showReset = true }) {
                                 Text("Passwort vergessen?")
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundColor(Color.scoonOrange.opacity(0.8))
@@ -160,6 +161,173 @@ struct LoginScreen: View {
             guard success == true else { return }
             router.login()
         }
+        .sheet(isPresented: $showReset, onDismiss: { vm?.clearResetState() }) {
+            if let vm {
+                PasswordResetSheet(vm: vm)
+            }
+        }
+    }
+}
+
+// MARK: – Password Reset Sheet
+
+private struct PasswordResetSheet: View {
+    let vm: AuthViewModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ZStack {
+            Color.scoonDarker.ignoresSafeArea()
+
+            RadialGradient(
+                colors: [Color.scoonOrange.opacity(0.1), .clear],
+                center: .top, startRadius: 0, endRadius: 250
+            )
+            .ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: 0) {
+                // Handle
+                Capsule()
+                    .fill(Color.white.opacity(0.18))
+                    .frame(width: 36, height: 4)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 12)
+
+                if vm.resetEmailSent {
+                    // Success state
+                    VStack(spacing: 20) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.scoonOrange.opacity(0.15))
+                                .frame(width: 80, height: 80)
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 40))
+                                .foregroundColor(Color.scoonOrange)
+                        }
+                        VStack(spacing: 8) {
+                            Text("E-Mail gesendet")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(.white)
+                            Text("Schau in dein Postfach. Der Reset-Link ist 1 Stunde gültig.")
+                                .font(.system(size: 14))
+                                .foregroundColor(.white.opacity(0.5))
+                                .multilineTextAlignment(.center)
+                        }
+                        Button(action: { dismiss() }) {
+                            Text("Schließen")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 56)
+                                .background(
+                                    LinearGradient(
+                                        colors: [Color.scoonOrange, Color(red: 1.0, green: 0.55, blue: 0.15)],
+                                        startPoint: .leading, endPoint: .trailing
+                                    )
+                                    .cornerRadius(16)
+                                )
+                                .shadow(color: Color.scoonOrange.opacity(0.4), radius: 12, x: 0, y: 4)
+                        }
+                        .padding(.top, 8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 40)
+                } else {
+                    // Input state
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("PASSWORT ZURÜCKSETZEN")
+                            .font(.system(size: 11, weight: .semibold))
+                            .tracking(1.5)
+                            .foregroundColor(Color.scoonOrange.opacity(0.8))
+                            .padding(.top, 28)
+                        Text("Reset-Link anfordern")
+                            .font(.system(size: 26, weight: .black, design: .rounded))
+                            .foregroundColor(.white)
+                        Text("Gib deine E-Mail ein und wir senden dir einen Link zum Zurücksetzen deines Passworts.")
+                            .font(.system(size: 14))
+                            .foregroundColor(.white.opacity(0.45))
+                            .lineSpacing(3)
+                            .padding(.top, 4)
+                    }
+                    .padding(.horizontal, 24)
+
+                    // Email field
+                    HStack(spacing: 10) {
+                        Image(systemName: "envelope")
+                            .font(.system(size: 15))
+                            .foregroundColor(.white.opacity(0.35))
+                        TextField(
+                            "",
+                            text: Binding(get: { vm.resetEmail }, set: { vm.resetEmail = $0 }),
+                            prompt: Text("deine@email.de").foregroundColor(.white.opacity(0.3))
+                        )
+                        .font(.system(size: 15))
+                        .foregroundColor(.white)
+                        .tint(Color.scoonOrange)
+                        .keyboardType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 15)
+                    .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.06)))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white.opacity(0.1), lineWidth: 1))
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
+
+                    // Error
+                    if let error = vm.error {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.circle.fill").foregroundColor(.red.opacity(0.8))
+                            Text(error).font(.system(size: 13)).foregroundColor(.red.opacity(0.8))
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(10)
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.red.opacity(0.2), lineWidth: 1))
+                        .padding(.horizontal, 24)
+                        .padding(.top, 10)
+                    }
+
+                    // Button
+                    Button(action: { Task { await vm.resetPassword() } }) {
+                        ZStack {
+                            LinearGradient(
+                                colors: [
+                                    Color.scoonOrange.opacity(vm.resetEmail.contains("@") ? 1 : 0.35),
+                                    Color(red: 1.0, green: 0.55, blue: 0.15).opacity(vm.resetEmail.contains("@") ? 1 : 0.35)
+                                ],
+                                startPoint: .leading, endPoint: .trailing
+                            )
+                            .cornerRadius(16)
+                            if vm.isLoading {
+                                ProgressView().tint(.white)
+                            } else {
+                                Text("Reset-Link senden")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .shadow(
+                            color: Color.scoonOrange.opacity(vm.resetEmail.contains("@") ? 0.4 : 0),
+                            radius: 12, x: 0, y: 4
+                        )
+                    }
+                    .disabled(!vm.resetEmail.contains("@") || vm.isLoading)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+                    .padding(.bottom, 40)
+                }
+
+                Spacer()
+            }
+        }
+        .presentationDetents([.height(380)])
+        .presentationCornerRadius(28)
+        .presentationBackground(Color.scoonDarker)
     }
 }
 

@@ -5,6 +5,7 @@ struct FavoritesScreen: View {
     @Environment(AppContainer.self) private var container
     @State private var vm: FavoritesViewModel?
     @State private var activeListTab = 0
+    @State private var showSort      = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -64,16 +65,21 @@ struct FavoritesScreen: View {
 
                 // ── Action row ────────────────────────────────────────
                 HStack(spacing: 8) {
-                    Button(action: {}) {
+                    Button(action: { showSort = true }) {
                         HStack(spacing: 5) {
                             Image(systemName: "arrow.up.arrow.down").font(.system(size: 11))
-                            Text("Neueste").font(.system(size: 13, weight: .medium))
+                            Text(vm?.sortOrder.rawValue ?? "Neueste").font(.system(size: 13, weight: .medium))
                         }
                         .foregroundColor(.white.opacity(0.7))
                         .padding(.horizontal, 12).padding(.vertical, 7)
                         .background(Color.primary.opacity(0.07))
                         .cornerRadius(10)
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.primary.opacity(0.09), lineWidth: 1))
+                    }
+                    .confirmationDialog("Sortieren", isPresented: $showSort, titleVisibility: .visible) {
+                        ForEach(SpotSortOrder.allCases, id: \.self) { order in
+                            Button(order.rawValue) { vm?.sortOrder = order }
+                        }
                     }
                     Button(action: { router.switchTab(to: .map) }) {
                         HStack(spacing: 5) {
@@ -87,10 +93,13 @@ struct FavoritesScreen: View {
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.scoonOrange.opacity(0.25), lineWidth: 1))
                     }
                     Spacer()
-                    if let vm, !vm.favorites.isEmpty {
-                        Text("\(vm.favorites.count) Orte")
-                            .font(.system(size: 13))
-                            .foregroundColor(Color.scoonTextSecondary)
+                    if let vm {
+                        let displayedCount = activeListTab == 0 ? vm.sortedFavorites.count : vm.sortedMySpots.count
+                        if displayedCount > 0 {
+                            Text("\(displayedCount) Orte")
+                                .font(.system(size: 13))
+                                .foregroundColor(Color.scoonTextSecondary)
+                        }
                     }
                 }
                 .padding(.horizontal, 22)
@@ -107,26 +116,34 @@ struct FavoritesScreen: View {
                                 .foregroundColor(Color.scoonTextSecondary)
                         }
                         Spacer()
-                    } else if vm.favorites.isEmpty {
-                        Spacer()
-                        FavoritesEmptyState { router.switchTab(to: .home) }
-                        Spacer()
                     } else {
-                        ScrollView(showsIndicators: false) {
-                            VStack(spacing: 12) {
-                                ForEach(vm.favorites) { spot in
-                                    FavoriteSpotRow(spot: spot) {
-                                        router.navigate(to: .placeInfo(spot))
-                                    } onToggle: {
-                                        vm.toggle(spot: spot)
+                        let displayedSpots = activeListTab == 0 ? vm.sortedFavorites : vm.sortedMySpots
+
+                        if displayedSpots.isEmpty {
+                            Spacer()
+                            if activeListTab == 0 {
+                                FavoritesEmptyState { router.switchTab(to: .home) }
+                            } else {
+                                MySpotsEmptyState { router.navigate(to: .addPhotoSpot) }
+                            }
+                            Spacer()
+                        } else {
+                            ScrollView(showsIndicators: false) {
+                                VStack(spacing: 12) {
+                                    ForEach(displayedSpots) { spot in
+                                        FavoriteSpotRow(spot: spot) {
+                                            router.navigate(to: .placeInfo(spot))
+                                        } onToggle: {
+                                            if activeListTab == 0 { vm.toggle(spot: spot) }
+                                        }
                                     }
                                 }
+                                .padding(.horizontal, 22)
+                                .padding(.top, 16)
+                                .padding(.bottom, 110)
                             }
-                            .padding(.horizontal, 22)
-                            .padding(.top, 16)
-                            .padding(.bottom, 110)
+                            .refreshable { await vm.refresh() }
                         }
-                        .refreshable { await vm.refresh() }
                     }
                 } else {
                     Spacer()
@@ -150,7 +167,48 @@ struct FavoritesScreen: View {
     }
 }
 
-// MARK: – Empty State
+// MARK: – Empty States
+
+private struct MySpotsEmptyState: View {
+    let onAdd: () -> Void
+
+    var body: some View {
+        VStack(spacing: 20) {
+            ZStack {
+                Circle()
+                    .fill(Color.scoonOrange.opacity(0.1))
+                    .frame(width: 80, height: 80)
+                Image(systemName: "camera.aperture")
+                    .font(.system(size: 32))
+                    .foregroundColor(Color.scoonOrange.opacity(0.7))
+            }
+            VStack(spacing: 6) {
+                Text("Noch keine eigenen Spots")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.primary)
+                Text("Füge deinen ersten Fotospot hinzu\nund teile ihn mit der Community.")
+                    .font(.system(size: 14))
+                    .foregroundColor(Color.scoonTextSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            Button(action: onAdd) {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus")
+                    Text("Spot hinzufügen")
+                        .fontWeight(.semibold)
+                }
+                .font(.system(size: 15))
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(Color.scoonOrange)
+                .cornerRadius(14)
+                .shadow(color: Color.scoonOrange.opacity(0.4), radius: 10, x: 0, y: 4)
+            }
+        }
+        .padding(.horizontal, 40)
+    }
+}
 
 private struct FavoritesEmptyState: View {
     let onExplore: () -> Void

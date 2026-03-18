@@ -69,4 +69,10 @@ final class MockAuthRepository: AuthRepositoryProtocol {
     }
 
     func currentUser() async -> User? { nil }
+
+    func resetPassword(email: String) async throws {
+        try await Task.sleep(for: .seconds(1.0))
+        guard email.contains("@") else { throw AuthError.invalidEmail }
+        // Mock success: Supabase sends the email on real device
+    }
 }

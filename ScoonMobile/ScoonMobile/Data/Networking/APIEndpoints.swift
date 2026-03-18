@@ -17,6 +17,8 @@ enum APIEndpoints {
         static let authorize     = "/auth/v1/authorize"
         /// POST – refresh access token. Add ?grant_type=refresh_token as query item.
         static let refreshToken  = "/auth/v1/token"
+        /// POST – send password reset email. Body: {"email": "..."}
+        static let recover       = "/auth/v1/recover"
     }
 
     enum Spots {

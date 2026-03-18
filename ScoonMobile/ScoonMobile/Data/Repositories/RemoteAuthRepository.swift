@@ -131,6 +131,12 @@ final class RemoteAuthRepository: AuthRepositoryProtocol {
 
     // MARK: – Session Management
 
+    func resetPassword(email: String) async throws {
+        let body = try ["email": email].asJSONData()
+        let request = APIRequest(method: .post, path: APIEndpoints.Auth.recover, body: body)
+        try await apiClient.send(request)
+    }
+
     func signOut() async throws {
         let request = APIRequest(method: .post, path: APIEndpoints.Auth.signOut, requiresAuth: true)
         do {

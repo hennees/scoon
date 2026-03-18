@@ -6,4 +6,5 @@ protocol AuthRepositoryProtocol {
     func signInWithGoogle() async throws -> User
     func signOut() async throws
     func currentUser() async -> User?
+    func resetPassword(email: String) async throws
 }

@@ -1,10 +1,12 @@
 import SwiftUI
+import CoreLocation
 
 struct HomeScreen: View {
     @Environment(AppRouter.self)    private var router
     @Environment(AppContainer.self) private var container
-    @State private var vm: HomeViewModel?
-    @State private var appeared = false
+    @State private var vm:       HomeViewModel?
+    @State private var appeared  = false
+    @State private var cityName  = "Graz · Österreich"
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -28,10 +30,11 @@ struct HomeScreen: View {
                                 Image(systemName: "location.fill")
                                     .font(.system(size: 9, weight: .semibold))
                                     .foregroundColor(Color.scoonOrange)
-                                Text("Graz · Österreich")
+                                Text(cityName)
                                     .font(.system(size: 12, weight: .medium))
                                     .foregroundColor(Color.scoonOrange.opacity(0.9))
                                     .tracking(0.3)
+                                    .animation(.easeInOut(duration: 0.3), value: cityName)
                             }
                         }
                         Spacer()
@@ -185,6 +188,22 @@ struct HomeScreen: View {
             vm = viewModel
             appeared = true
             await viewModel.onAppear()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .mapCitySelected)) { notification in
+            guard let info = notification.userInfo,
+                  let lat  = info["lat"] as? Double,
+                  let lon  = info["lon"] as? Double
+            else { return }
+            CLGeocoder().reverseGeocodeLocation(
+                CLLocation(latitude: lat, longitude: lon)
+            ) { placemarks, _ in
+                DispatchQueue.main.async {
+                    if let city    = placemarks?.first?.locality,
+                       let country = placemarks?.first?.country {
+                        cityName = "\(city) · \(country)"
+                    }
+                }
+            }
         }
     }
 }

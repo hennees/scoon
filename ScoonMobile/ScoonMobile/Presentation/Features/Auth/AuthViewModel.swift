@@ -7,10 +7,12 @@ final class AuthViewModel {
     var password: String = ""
     var username: String = ""
 
-    private(set) var isLoading:   Bool    = false
-    private(set) var error:       String? = nil
-    private(set) var isSuccess:   Bool    = false
-    private(set) var isSignedOut: Bool    = false
+    private(set) var isLoading:      Bool    = false
+    private(set) var error:          String? = nil
+    private(set) var isSuccess:      Bool    = false
+    private(set) var isSignedOut:    Bool    = false
+    private(set) var resetEmailSent: Bool    = false
+    var resetEmail: String = ""
 
     private let authRepository: AuthRepositoryProtocol
 
@@ -64,6 +66,28 @@ final class AuthViewModel {
     }
 
     func clearError() { error = nil }
+
+    func resetPassword() async {
+        guard resetEmail.contains("@") else {
+            error = "Bitte gib eine gültige E-Mail-Adresse ein."
+            return
+        }
+        isLoading = true
+        error = nil
+        do {
+            try await authRepository.resetPassword(email: resetEmail)
+            resetEmailSent = true
+        } catch {
+            self.error = error.localizedDescription
+        }
+        isLoading = false
+    }
+
+    func clearResetState() {
+        resetEmailSent = false
+        resetEmail = ""
+        error = nil
+    }
 
     // MARK: – Private
 
