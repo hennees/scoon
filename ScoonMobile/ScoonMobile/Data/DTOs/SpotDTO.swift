@@ -1,7 +1,7 @@
 import Foundation
 
-/// Codable mirror of the future API response for a spot.
-/// Field names match a typical REST/JSON API (snake_case).
+/// Codable mirror of the Supabase spots_with_favorites view.
+/// Field names match snake_case columns; JSONDecoder uses .convertFromSnakeCase.
 struct SpotDTO: Codable {
     let id:          String
     let name:        String
@@ -15,4 +15,6 @@ struct SpotDTO: Codable {
     let save_count:  Int
     let distance:    String?
     let category:    String
+    let latitude:    Double?
+    let longitude:   Double?
 }

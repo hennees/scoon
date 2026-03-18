@@ -107,9 +107,11 @@ struct LoginScreen: View {
 
                             // Social buttons
                             HStack(spacing: 16) {
-                                SocialIconButton(systemImage: "f.square.fill", tint: Color(red: 0.23, green: 0.35, blue: 0.6))
-                                SocialIconButton(systemImage: "g.circle.fill", tint: Color(red: 0.92, green: 0.26, blue: 0.21))
-                                SocialIconButton(systemImage: "apple.logo",    tint: .black)
+                                SocialIconButton(systemImage: "f.square.fill", tint: Color(red: 0.23, green: 0.35, blue: 0.6)) {}
+                                SocialIconButton(systemImage: "g.circle.fill", tint: Color(red: 0.92, green: 0.26, blue: 0.21)) {
+                                    Task { await vm.signInWithGoogle() }
+                                }
+                                SocialIconButton(systemImage: "apple.logo", tint: .black) {}
                             }
                             .padding(.top, 20)
                         }
@@ -150,9 +152,10 @@ struct LoginScreen: View {
 private struct SocialIconButton: View {
     let systemImage: String
     let tint: Color
+    let action: () -> Void
 
     var body: some View {
-        Button(action: {}) {
+        Button(action: action) {
             Image(systemName: systemImage)
                 .resizable().scaledToFit()
                 .frame(width: 22, height: 22)

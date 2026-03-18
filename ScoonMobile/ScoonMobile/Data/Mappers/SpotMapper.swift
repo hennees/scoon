@@ -14,7 +14,9 @@ enum SpotMapper {
             likeCount:   dto.like_count,
             saveCount:   dto.save_count,
             distance:    dto.distance,
-            category:    SpotCategory(rawValue: dto.category) ?? .urban
+            category:    SpotCategory(rawValue: dto.category) ?? .urban,
+            latitude:    dto.latitude,
+            longitude:   dto.longitude
         )
     }
 }

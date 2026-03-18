@@ -1,6 +1,7 @@
 import Foundation
 
 @Observable
+@MainActor
 final class FavoritesViewModel {
     private(set) var favorites: [Spot] = []
     private(set) var isLoading: Bool   = false

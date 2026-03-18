@@ -1,10 +1,11 @@
 import Foundation
 
 @Observable
+@MainActor
 final class AuthViewModel {
-    var email:     String = ""
-    var password:  String = ""
-    var username:  String = ""
+    var email:    String = ""
+    var password: String = ""
+    var username: String = ""
 
     private(set) var isLoading: Bool    = false
     private(set) var error:     String? = nil
@@ -44,13 +45,17 @@ final class AuthViewModel {
         await perform { try await self.authRepository.signUp(email: self.email, password: self.password, username: self.username) }
     }
 
+    func signInWithGoogle() async {
+        await perform { try await self.authRepository.signInWithGoogle() }
+    }
+
     func clearError() { error = nil }
 
     // MARK: – Private
 
     private func perform(_ action: @escaping () async throws -> User) async {
         isLoading = true
-        error = nil
+        error     = nil
         do {
             _ = try await action()
             isSuccess = true

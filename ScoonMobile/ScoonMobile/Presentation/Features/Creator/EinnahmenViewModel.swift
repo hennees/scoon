@@ -1,6 +1,7 @@
 import Foundation
 
 @Observable
+@MainActor
 final class EinnahmenViewModel {
     private(set) var transactions:  [Transaction] = []
     private(set) var pendingPayout: Decimal       = 0

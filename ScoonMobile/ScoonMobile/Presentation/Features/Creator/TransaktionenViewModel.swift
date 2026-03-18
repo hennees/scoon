@@ -1,6 +1,7 @@
 import Foundation
 
 @Observable
+@MainActor
 final class TransaktionenViewModel {
     private(set) var transactions: [Transaction] = []
     private(set) var isLoading:    Bool          = false

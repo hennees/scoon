@@ -1,6 +1,7 @@
 import Foundation
 
 @Observable
+@MainActor
 final class ProfileViewModel {
     private(set) var user:          User?    = nil
     private(set) var exploredSpots: [Spot]   = []

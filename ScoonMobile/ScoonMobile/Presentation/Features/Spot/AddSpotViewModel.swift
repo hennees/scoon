@@ -1,6 +1,7 @@
 import Foundation
 
 @Observable
+@MainActor
 final class AddSpotViewModel {
     var name:        String = ""
     var location:    String = ""

@@ -15,6 +15,8 @@ struct Spot: Identifiable, Hashable {
     let saveCount:   Int
     let distance:    String?   // optional – only populated in map/nearby context
     let category:    SpotCategory
+    let latitude:    Double?   // nil for spots without GPS data yet
+    let longitude:   Double?
 }
 
 enum SpotCategory: String, CaseIterable, Hashable {

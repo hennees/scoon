@@ -1,6 +1,7 @@
 import Foundation
 
 @Observable
+@MainActor
 final class HomeViewModel {
     private(set) var spots:     [Spot] = []
     private(set) var isLoading: Bool   = false
@@ -10,6 +11,7 @@ final class HomeViewModel {
     var activeFilter: SpotFilter = .topRated
 
     private let fetchSpots: FetchSpotsUseCase
+    private var loadTask: Task<Void, Never>?
 
     init(fetchSpots: FetchSpotsUseCase) {
         self.fetchSpots = fetchSpots
@@ -25,22 +27,33 @@ final class HomeViewModel {
 
     func onAppear() async {
         guard spots.isEmpty else { return }
-        await load()
+        await load(for: activeFilter)
     }
 
     func applyFilter(_ filter: SpotFilter) {
         activeFilter = filter
-        Task { await load() }
+        loadTask?.cancel()
+        loadTask = Task { [weak self] in
+            await self?.load(for: filter)
+        }
     }
 
-    private func load() async {
+    private func load(for filter: SpotFilter) async {
         isLoading = true
         error = nil
+        defer { isLoading = false }
+
         do {
-            spots = try await fetchSpots.execute(filter: activeFilter)
+            let result = try await fetchSpots.execute(filter: filter)
+
+            guard !Task.isCancelled else { return }
+            guard filter == activeFilter else { return }
+
+            spots = result
+        } catch is CancellationError {
+            return
         } catch {
             self.error = error.localizedDescription
         }
-        isLoading = false
     }
 }

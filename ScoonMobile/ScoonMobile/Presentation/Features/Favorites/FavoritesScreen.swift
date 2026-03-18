@@ -178,62 +178,62 @@ private struct FavoriteSpotRow: View {
     let onToggle: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
-            HStack(alignment: .top, spacing: 14) {
-                // Thumbnail
-                AsyncImage(url: URL(string: spot.imageURL)) { phase in
-                    switch phase {
-                    case .success(let img): img.resizable().scaledToFill()
-                    default: Rectangle().fill(Color.white.opacity(0.06))
-                        .overlay(Image(systemName: "photo").foregroundColor(.white.opacity(0.2)))
-                    }
-                }
-                .frame(width: 80, height: 80)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                // Info
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(spot.name)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white)
-                    Text(spot.description)
-                        .font(.system(size: 13))
-                        .foregroundColor(Color.scoonTextSecondary)
-                        .lineLimit(2)
-                    HStack(spacing: 4) {
-                        Image(systemName: "mappin.fill")
-                            .font(.system(size: 10))
-                            .foregroundColor(Color.scoonOrange)
-                        Text(spot.location)
-                            .font(.system(size: 12))
-                            .foregroundColor(Color.scoonTextSecondary)
-                    }
-                    .padding(.top, 2)
-                    Text("Auf der Karte")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(Color.scoonOrange)
-                        .padding(.top, 2)
-                }
-
-                Spacer()
-
-                // Heart
-                Button(action: onToggle) {
-                    Image(systemName: spot.isFavorite ? "heart.fill" : "heart")
-                        .foregroundColor(spot.isFavorite ? Color.scoonOrange : Color.scoonTextSecondary)
-                        .font(.system(size: 18))
+        HStack(alignment: .top, spacing: 14) {
+            // Thumbnail
+            AsyncImage(url: URL(string: spot.imageURL)) { phase in
+                switch phase {
+                case .success(let img): img.resizable().scaledToFill()
+                default: Rectangle().fill(Color.white.opacity(0.06))
+                    .overlay(Image(systemName: "photo").foregroundColor(.white.opacity(0.2)))
                 }
             }
-            .padding(14)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color.white.opacity(0.05))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                    )
-            )
+            .frame(width: 80, height: 80)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+            // Info
+            VStack(alignment: .leading, spacing: 4) {
+                Text(spot.name)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+                Text(spot.description)
+                    .font(.system(size: 13))
+                    .foregroundColor(Color.scoonTextSecondary)
+                    .lineLimit(2)
+                HStack(spacing: 4) {
+                    Image(systemName: "mappin.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(Color.scoonOrange)
+                    Text(spot.location)
+                        .font(.system(size: 12))
+                        .foregroundColor(Color.scoonTextSecondary)
+                }
+                .padding(.top, 2)
+                Text("Auf der Karte")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(Color.scoonOrange)
+                    .padding(.top, 2)
+            }
+
+            Spacer()
+
+            // Heart
+            Button(action: onToggle) {
+                Image(systemName: spot.isFavorite ? "heart.fill" : "heart")
+                    .foregroundColor(spot.isFavorite ? Color.scoonOrange : Color.scoonTextSecondary)
+                    .font(.system(size: 18))
+            }
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                )
+        )
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
     }
 }

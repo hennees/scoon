@@ -1,6 +1,7 @@
 import Foundation
 
 @Observable
+@MainActor
 final class InsightsViewModel {
     private(set) var summary:    InsightsSummary?
     private(set) var topSpots:   [Spot]   = []

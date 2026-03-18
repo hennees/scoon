@@ -50,6 +50,16 @@ final class MockAuthRepository: AuthRepositoryProtocol {
         )
     }
 
+    func signInWithGoogle() async throws -> User {
+        // In mock mode, simulate Google login instantly
+        try await Task.sleep(for: .seconds(0.8))
+        return User(
+            id: UUID(), username: "Google User", email: "user@gmail.com",
+            bio: "", avatarURL: "",
+            postCount: 0, followerCount: 0, followingCount: 0
+        )
+    }
+
     func signOut() async throws {
         try await Task.sleep(for: .seconds(0.3))
     }
