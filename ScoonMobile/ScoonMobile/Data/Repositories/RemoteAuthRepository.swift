@@ -180,10 +180,11 @@ final class RemoteAuthRepository: AuthRepositoryProtocol {
     private func mapAuthError(_ error: Error) -> Error {
         guard let apiError = error as? APIError else { return error }
         switch apiError {
-        case .unauthorized:       return AuthError.wrongPassword
-        case .conflict:           return AuthError.emailAlreadyInUse
+        case .unauthorized:        return AuthError.wrongPassword
+        case .conflict:            return AuthError.emailAlreadyInUse
         case .unprocessableEntity: return AuthError.invalidEmail
-        default:                  return apiError
+        case .forbidden:           return AuthError.emailNotConfirmed
+        default:                   return apiError
         }
     }
 }

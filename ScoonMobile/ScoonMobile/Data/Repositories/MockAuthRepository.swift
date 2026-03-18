@@ -6,6 +6,7 @@ enum AuthError: LocalizedError {
     case userNotFound
     case emailAlreadyInUse
     case weakPassword
+    case emailNotConfirmed
 
     var errorDescription: String? {
         switch self {
@@ -14,6 +15,7 @@ enum AuthError: LocalizedError {
         case .userNotFound:      return "Kein Konto mit dieser E-Mail gefunden."
         case .emailAlreadyInUse: return "Diese E-Mail-Adresse wird bereits verwendet."
         case .weakPassword:      return "Das Passwort muss mindestens 8 Zeichen lang sein."
+        case .emailNotConfirmed: return "Bitte bestätige zuerst deine E-Mail-Adresse. Schau in dein Postfach."
         }
     }
 }

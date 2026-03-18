@@ -8,7 +8,7 @@ struct SignUpSocialScreen: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color.scoonDark.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Back

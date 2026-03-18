@@ -8,7 +8,7 @@ struct SignUpFormScreen: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color.scoonDark.ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
@@ -140,9 +140,11 @@ struct AuthField: View {
 
             Group {
                 if isSecure {
-                    SecureField(placeholder, text: $text)
+                    SecureField("", text: $text, prompt:
+                        Text(placeholder).foregroundColor(.white.opacity(0.45)))
                 } else {
-                    TextField(placeholder, text: $text)
+                    TextField("", text: $text, prompt:
+                        Text(placeholder).foregroundColor(.white.opacity(0.45)))
                         .keyboardType(keyboard)
                         .autocapitalization(.none)
                         .autocorrectionDisabled()
@@ -152,11 +154,11 @@ struct AuthField: View {
             .foregroundColor(.white)
             .padding(.horizontal, 16)
             .frame(height: 52)
-            .background(Color.white.opacity(0.07))
+            .background(Color.white.opacity(0.08))
             .cornerRadius(12)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                    .stroke(Color.white.opacity(0.12), lineWidth: 1)
             )
         }
     }
