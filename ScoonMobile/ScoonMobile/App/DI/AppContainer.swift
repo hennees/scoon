@@ -20,6 +20,10 @@ final class AppContainer {
     let transactionRepository: TransactionRepositoryProtocol
     let authRepository:        AuthRepositoryProtocol
 
+    // MARK: – Services
+
+    private let imageUploadService: ImageUploadService?
+
     // MARK: – Init
 
     init(mode: DataSourceMode = AppEnvironment.current.useRemoteData ? .remote : .mock) {
@@ -29,6 +33,7 @@ final class AppContainer {
             userRepository        = MockUserRepository()
             transactionRepository = MockTransactionRepository()
             authRepository        = MockAuthRepository()
+            imageUploadService    = nil
 
         case .remote:
             let env = AppEnvironment.current
@@ -39,6 +44,7 @@ final class AppContainer {
                 userRepository        = MockUserRepository()
                 transactionRepository = MockTransactionRepository()
                 authRepository        = MockAuthRepository()
+                imageUploadService    = nil
                 return
             }
 
@@ -50,12 +56,17 @@ final class AppContainer {
             )
 
             spotRepository        = RemoteSpotRepository(apiClient: apiClient, sessionStore: sessionStore)
-            userRepository        = RemoteUserRepository(apiClient: apiClient)
+            userRepository        = RemoteUserRepository(apiClient: apiClient, sessionStore: sessionStore)
             transactionRepository = RemoteTransactionRepository(apiClient: apiClient)
             authRepository        = RemoteAuthRepository(
                 apiClient:    apiClient,
                 sessionStore: sessionStore,
                 supabaseURL:  baseURL.absoluteString
+            )
+            imageUploadService    = ImageUploadService(
+                supabaseURL:  baseURL.absoluteString,
+                anonKey:      anonKey,
+                sessionStore: sessionStore
             )
         }
     }
@@ -69,15 +80,26 @@ final class AppContainer {
     var fetchProfileUseCase:      FetchUserProfileUseCase  { FetchUserProfileUseCase(repository: userRepository) }
     var fetchInsightsUseCase:     FetchInsightsUseCase     { FetchInsightsUseCase(repository: userRepository) }
     var fetchTransactionsUseCase: FetchTransactionsUseCase { FetchTransactionsUseCase(repository: transactionRepository) }
+    var updateProfileUseCase:     UpdateProfileUseCase     { UpdateProfileUseCase(repository: userRepository) }
 
     // MARK: – ViewModel factories
 
     func makeAuthViewModel()          -> AuthViewModel          { AuthViewModel(authRepository: authRepository) }
-    func makeAddSpotViewModel()       -> AddSpotViewModel       { AddSpotViewModel(createSpot: createSpotUseCase) }
+    func makeAddSpotViewModel()       -> AddSpotViewModel       { AddSpotViewModel(createSpot: createSpotUseCase, uploadService: imageUploadService) }
     func makeHomeViewModel()          -> HomeViewModel          { HomeViewModel(fetchSpots: fetchSpotsUseCase) }
     func makeFavoritesViewModel()     -> FavoritesViewModel     { FavoritesViewModel(fetchFavorites: fetchFavoritesUseCase, toggleFavorite: toggleFavoriteUseCase) }
     func makeProfileViewModel()       -> ProfileViewModel       { ProfileViewModel(fetchProfile: fetchProfileUseCase) }
     func makeInsightsViewModel()      -> InsightsViewModel      { InsightsViewModel(fetchInsights: fetchInsightsUseCase, fetchProfile: fetchProfileUseCase) }
     func makeEinnahmenViewModel()     -> EinnahmenViewModel     { EinnahmenViewModel(fetchTransactions: fetchTransactionsUseCase) }
     func makeTransaktionenViewModel() -> TransaktionenViewModel { TransaktionenViewModel(fetchTransactions: fetchTransactionsUseCase) }
+    func makeMapViewModel()           -> MapViewModel           { MapViewModel(fetchSpots: fetchSpotsUseCase) }
+    func makeAddPhotoToSpotViewModel(spot: Spot) -> AddPhotoToSpotViewModel {
+        AddPhotoToSpotViewModel(spot: spot, spotRepository: spotRepository, uploadService: imageUploadService)
+    }
+    func makeEditProfileViewModel(user: User) -> EditProfileViewModel {
+        EditProfileViewModel(user: user, updateProfile: updateProfileUseCase, uploadService: imageUploadService)
+    }
+    func makeBecomeCreatorViewModel() -> BecomeCreatorViewModel {
+        BecomeCreatorViewModel(userRepository: userRepository)
+    }
 }

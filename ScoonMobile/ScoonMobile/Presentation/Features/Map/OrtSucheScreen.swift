@@ -96,7 +96,7 @@ struct OrtSucheScreen: View {
             .cornerRadius(24, corners: [.topLeft, .topRight])
             .frame(maxHeight: .infinity)
         }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     private var filteredCities: [(country: String, list: [String])] {

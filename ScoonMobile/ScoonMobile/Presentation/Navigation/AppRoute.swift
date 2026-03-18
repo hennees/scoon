@@ -19,4 +19,10 @@ enum AppRoute: Hashable {
     case einnahmen           // Earnings overview
     case ortSuche            // City selection sheet
     case transaktionen       // Transactions list
+    case privacyPolicy       // Datenschutzerklärung
+    case termsOfService      // Nutzungsbedingungen
+    case imprint             // Impressum
+    case editProfile(User)    // Profil bearbeiten
+    case addPhotoToSpot(Spot) // Foto zu bestehendem Spot hinzufügen
+    case becomeCreator        // Creator-Bewerbung
 }

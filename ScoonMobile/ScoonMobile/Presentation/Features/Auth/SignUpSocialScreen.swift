@@ -1,64 +1,82 @@
 import SwiftUI
 
-/// Registrierung – Methode wählen: Google oder E-Mail
 struct SignUpSocialScreen: View {
     @Environment(AppRouter.self)    private var router
     @Environment(AppContainer.self) private var container
     @State private var vm: AuthViewModel?
+    @State private var appeared = false
 
     var body: some View {
         ZStack {
-            Color.scoonDark.ignoresSafeArea()
+            Color.scoonDarker.ignoresSafeArea()
+
+            RadialGradient(
+                colors: [Color.scoonOrange.opacity(0.14), .clear],
+                center: .init(x: 0.5, y: 1.1),
+                startRadius: 0,
+                endRadius: UIScreen.main.bounds.height * 0.55
+            )
+            .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Back
+                // ── Back ──────────────────────────────────────────────
                 HStack {
-                    Button(action: { router.navigateBack() }) {
-                        Image(systemName: "arrow.left")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.white)
-                            .frame(width: 44, height: 44)
-                    }
+                    BackButton { router.navigateBack() }
                     Spacer()
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 52)
+                .padding(.horizontal, 20)
+                .padding(.top, 56)
+                .opacity(appeared ? 1 : 0)
+                .animation(.easeOut(duration: 0.3), value: appeared)
 
                 Spacer()
 
+                // ── Title ─────────────────────────────────────────────
                 VStack(spacing: 8) {
                     Text("scoon")
-                        .font(.system(size: 32, weight: .black, design: .rounded))
-                        .foregroundColor(.white)
+                        .font(.system(size: 42, weight: .black, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.white, Color.primary.opacity(0.85)],
+                                startPoint: .topLeading, endPoint: .bottomTrailing
+                            )
+                        )
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 20)
+                        .animation(.spring(response: 0.55, dampingFraction: 0.75).delay(0.05), value: appeared)
 
                     Text("Konto erstellen")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.top, 4)
+                        .font(.system(size: 26, weight: .bold))
+                        .foregroundColor(.primary)
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 12)
+                        .animation(.spring(response: 0.55, dampingFraction: 0.75).delay(0.1), value: appeared)
 
                     Text("Wähle eine Registrierungsmethode")
                         .font(.system(size: 15))
-                        .foregroundColor(.white.opacity(0.45))
-                        .padding(.top, 8)
+                        .foregroundColor(Color.scoonTextSecondary)
+                        .padding(.top, 4)
+                        .opacity(appeared ? 1 : 0)
+                        .animation(.easeOut(duration: 0.4).delay(0.15), value: appeared)
                 }
 
                 Spacer()
 
-                // Error
-                if let error = vm?.error {
-                    HStack(spacing: 8) {
-                        Image(systemName: "exclamationmark.circle.fill").foregroundColor(.red)
-                        Text(error).font(.system(size: 13)).foregroundColor(.red)
-                    }
-                    .padding(12)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.red.opacity(0.1))
-                    .cornerRadius(10)
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 16)
-                }
-
+                // ── Auth options ──────────────────────────────────────
                 VStack(spacing: 14) {
+                    // Error
+                    if let error = vm?.error {
+                        HStack(spacing: 8) {
+                            Image(systemName: "exclamationmark.circle.fill").foregroundColor(.red)
+                            Text(error).font(.system(size: 13)).foregroundColor(.red)
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(12)
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.red.opacity(0.2), lineWidth: 1))
+                    }
+
                     // Google
                     if let vm {
                         GoogleRegisterButton(isLoading: vm.isLoading) {
@@ -68,40 +86,54 @@ struct SignUpSocialScreen: View {
 
                     // Divider
                     HStack {
-                        Rectangle().fill(Color.white.opacity(0.12)).frame(height: 1)
+                        Rectangle().fill(Color.primary.opacity(0.1)).frame(height: 1)
                         Text("oder")
                             .font(.system(size: 13))
-                            .foregroundColor(.white.opacity(0.35))
+                            .foregroundColor(.white.opacity(0.3))
                             .padding(.horizontal, 14)
-                        Rectangle().fill(Color.white.opacity(0.12)).frame(height: 1)
+                        Rectangle().fill(Color.primary.opacity(0.1)).frame(height: 1)
                     }
 
                     // E-Mail
                     Button(action: { router.navigate(to: .signUpForm) }) {
                         HStack(spacing: 12) {
-                            Image(systemName: "envelope.fill")
-                                .font(.system(size: 16))
-                                .foregroundColor(.white)
+                            ZStack {
+                                Circle()
+                                    .fill(Color.primary.opacity(0.15))
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: "envelope.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.primary)
+                            }
                             Text("Mit E-Mail registrieren")
                                 .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
                             Spacer()
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.white.opacity(0.5))
                         }
-                        .padding(.horizontal, 20)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(Color.white.opacity(0.08))
+                        .padding(.horizontal, 18)
+                        .frame(maxWidth: .infinity).frame(height: 56)
+                        .background(Color.primary.opacity(0.08))
                         .cornerRadius(14)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                        )
                     }
                 }
                 .padding(.horizontal, 24)
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 20)
+                .animation(.easeOut(duration: 0.4).delay(0.2), value: appeared)
 
-                Spacer().frame(height: 32)
+                Spacer().frame(height: 28)
 
-                // Login link
+                // ── Login link ────────────────────────────────────────
                 HStack(spacing: 4) {
                     Text("Bereits ein Konto?")
-                        .foregroundColor(.white.opacity(0.45))
+                        .foregroundColor(.white.opacity(0.4))
                     Button(action: { router.navigate(to: .login) }) {
                         Text("Anmelden")
                             .foregroundColor(Color.scoonOrange)
@@ -109,16 +141,20 @@ struct SignUpSocialScreen: View {
                     }
                 }
                 .font(.system(size: 14))
+                .opacity(appeared ? 1 : 0)
+                .animation(.easeOut(duration: 0.4).delay(0.25), value: appeared)
 
                 Spacer().frame(height: 48)
             }
         }
-        .navigationBarHidden(true)
-        .onAppear { if vm == nil { vm = container.makeAuthViewModel() } }
+        .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            if vm == nil { vm = container.makeAuthViewModel() }
+            appeared = true
+        }
         .onChange(of: vm?.isSuccess) { _, success in
             guard success == true else { return }
-            router.navigateToRoot()
-            router.navigate(to: .home)
+            router.login()
         }
     }
 }
@@ -142,12 +178,11 @@ private struct GoogleRegisterButton: View {
                     ProgressView().tint(.gray).scaleEffect(0.8)
                 }
             }
-            .padding(.horizontal, 20)
-            .frame(maxWidth: .infinity)
-            .frame(height: 56)
+            .padding(.horizontal, 18)
+            .frame(maxWidth: .infinity).frame(height: 56)
             .background(.white)
             .cornerRadius(14)
-            .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 2)
+            .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 3)
         }
         .disabled(isLoading)
     }
@@ -173,12 +208,10 @@ struct GoogleGMark: View {
                          startAngle: .degrees(s), endAngle: .degrees(e), clockwise: false)
                 ctx.stroke(p, with: .color(c), lineWidth: lw)
             }
-            // Gap
             var gap = Path()
             gap.addArc(center: CGPoint(x: cx, y: cy), radius: r,
                        startAngle: .degrees(-30), endAngle: .degrees(0), clockwise: false)
             ctx.stroke(gap, with: .color(.white), lineWidth: lw)
-            // Bar
             var bar = Path()
             bar.move(to: CGPoint(x: cx, y: cy))
             bar.addLine(to: CGPoint(x: cx + r, y: cy))

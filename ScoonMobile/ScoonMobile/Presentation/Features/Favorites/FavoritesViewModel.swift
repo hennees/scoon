@@ -31,6 +31,10 @@ final class FavoritesViewModel {
         }
     }
 
+    func refresh() async {
+        await load()
+    }
+
     private func load() async {
         isLoading = true
         error = nil

@@ -12,13 +12,31 @@ final class ProfileViewModel {
     var activeTab: ProfileTab = .explored
 
     private let fetchProfile: FetchUserProfileUseCase
+    private nonisolated(unsafe) var updateTask: Task<Void, Never>?
 
     init(fetchProfile: FetchUserProfileUseCase) {
         self.fetchProfile = fetchProfile
+        startObservingProfileUpdates()
     }
+
+    private func startObservingProfileUpdates() {
+        updateTask = Task { [weak self] in
+            for await notification in NotificationCenter.default.notifications(named: .profileUpdated) {
+                guard let self, let updated = notification.object as? User else { continue }
+                self.user = updated
+            }
+        }
+    }
+
+    deinit { updateTask?.cancel() }
 
     var displayedSpots: [Spot] {
         activeTab == .explored ? exploredSpots : savedSpots
+    }
+
+    func refresh() async {
+        user = nil
+        await onAppear()
     }
 
     func onAppear() async {

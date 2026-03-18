@@ -86,4 +86,9 @@ final class MockSpotRepository: SpotRepositoryProtocol {
                         distance: s.distance, category: s.category,
                         latitude: s.latitude, longitude: s.longitude)
     }
+
+    func addPhotosToSpot(spotID: UUID, imageURLs: [String]) async throws {
+        try await Task.sleep(for: .seconds(simulatedDelay))
+        // Mock: no-op — photos are tracked in-memory via SpotPhoto model
+    }
 }

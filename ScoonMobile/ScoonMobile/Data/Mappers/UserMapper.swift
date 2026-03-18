@@ -7,10 +7,11 @@ enum UserMapper {
             username:       dto.username,
             email:          dto.email,
             bio:            dto.bio,
-            avatarURL:      dto.avatar_url,
-            postCount:      dto.post_count,
-            followerCount:  dto.follower_count,
-            followingCount: dto.following_count
+            avatarURL:      dto.avatarUrl,
+            postCount:      dto.postCount,
+            followerCount:  dto.followerCount,
+            followingCount: dto.followingCount,
+            isCreator:      dto.isCreator ?? false
         )
     }
 }

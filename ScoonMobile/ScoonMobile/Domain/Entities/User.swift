@@ -9,4 +9,5 @@ struct User: Identifiable, Hashable {
     let postCount:      Int
     let followerCount:  Int
     let followingCount: Int
+    let isCreator:      Bool
 }

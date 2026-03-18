@@ -20,7 +20,7 @@ struct SplashScreen: View {
             VStack(spacing: 10) {
                 Text("scoon")
                     .font(.system(size: 72, weight: .black, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
 
                 Text("YOUR SPOT – YOUR STORY")
                     .font(.system(size: 13, weight: .medium))

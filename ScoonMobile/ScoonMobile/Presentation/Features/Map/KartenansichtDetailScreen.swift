@@ -4,35 +4,22 @@ import MapKit
 // Design: 387:934 – Kartenansicht Detail
 // Map view with bottom sheet: horizontal spot cards + category filter row.
 struct KartenansichtDetailScreen: View {
-    @Environment(AppRouter.self) private var router
+    @Environment(AppRouter.self)    private var router
+    @Environment(AppContainer.self) private var container
+    @State private var vm: MapViewModel?
 
-    @State private var selectedTab     = NavTab.map
-    @State private var activeCategory  = "Park & Garten"
-    @State private var region          = MKCoordinateRegion(
+    @State private var activeCategory: SpotCategory? = nil
+    @State private var region = MKCoordinateRegion(
         center:     CLLocationCoordinate2D(latitude: 47.0707, longitude: 15.4395),
         latitudinalMeters:  2000,
         longitudinalMeters: 2000
     )
 
-    private let categories = ["Park & Garten", "Ausstellungen", "Denkmäler"]
-
-    private let nearbySpots: [Spot] = [
-        Spot(id: UUID(), name: "Uhrturm",     location: "Graz, Austria", rating: 4.7,
-             imageURL: "https://www.figma.com/api/mcp/asset/4c92510c-b715-4ba9-b560-fb389c098aad",
-             isFavorite: false, description: "Der Uhrturm ist das Wahrzeichen von Graz.",
-             viewCount: 980, likeCount: 310, saveCount: 140, distance: "0.3 km", category: .monuments,
-             latitude: 47.0726, longitude: 15.4387),
-        Spot(id: UUID(), name: "Haker-Löwe",  location: "Graz, Austria", rating: 4.5,
-             imageURL: "https://www.figma.com/api/mcp/asset/5c2eff61-1398-46d1-b246-219c24477e45",
-             isFavorite: false, description: "Historisches Stadtzentrum mit beeindruckender Architektur.",
-             viewCount: 420, likeCount: 180, saveCount: 60, distance: "0.7 km", category: .architecture,
-             latitude: 47.0708, longitude: 15.4386),
-        Spot(id: UUID(), name: "Blumenwiese", location: "Graz, Austria", rating: 4.3,
-             imageURL: "https://www.figma.com/api/mcp/asset/ad0ee92b-65cd-4acb-804a-51f27ccd4685",
-             isFavorite: false, description: "Wunderschöne Wiese ideal für Naturfotos.",
-             viewCount: 210, likeCount: 95, saveCount: 38, distance: "1.2 km", category: .nature,
-             latitude: 47.0749, longitude: 15.4415),
-    ]
+    private var filteredSpots: [Spot] {
+        guard let vm else { return [] }
+        guard let cat = activeCategory else { return vm.mappableSpots }
+        return vm.mappableSpots.filter { $0.category == cat }
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -43,29 +30,42 @@ struct KartenansichtDetailScreen: View {
             VStack(spacing: 0) {
                 // Drag handle
                 Capsule()
-                    .fill(Color.white.opacity(0.3))
+                    .fill(Color.primary.opacity(0.3))
                     .frame(width: 36, height: 4)
                     .padding(.top, 10)
                     .padding(.bottom, 14)
 
                 // Horizontal spot cards
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(nearbySpots) { spot in
-                            NearbySpotCard(spot: spot) {
-                                router.navigate(to: .placeInfo(spot))
+                if let vm, vm.isLoading {
+                    ProgressView().tint(Color.scoonOrange).padding(.vertical, 20)
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(filteredSpots) { spot in
+                                NearbySpotCard(spot: spot) {
+                                    router.navigate(to: .placeInfo(spot))
+                                }
                             }
                         }
+                        .padding(.horizontal, 16)
                     }
-                    .padding(.horizontal, 16)
                 }
 
                 // Category filter row
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) {
-                        ForEach(categories, id: \.self) { cat in
+                        Button(action: { activeCategory = nil }) {
+                            Text("Alle")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(activeCategory == nil ? Color.scoonOrange : Color.black)
+                                .clipShape(Capsule())
+                        }
+                        ForEach(SpotCategory.allCases, id: \.self) { cat in
                             Button(action: { activeCategory = cat }) {
-                                Text(cat)
+                                Text(cat.rawValue)
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 16)
@@ -86,10 +86,13 @@ struct KartenansichtDetailScreen: View {
                     .fill(Color.scoonDark)
             )
             .padding(.bottom, 80)
-
-            NavBarView(selectedTab: $selectedTab)
         }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .task {
+            let viewModel = container.makeMapViewModel()
+            vm = viewModel
+            await viewModel.load()
+        }
     }
 }
 
@@ -103,7 +106,7 @@ private struct NearbySpotCard: View {
                 AsyncImage(url: URL(string: spot.imageURL)) { phase in
                     switch phase {
                     case .success(let img): img.resizable().scaledToFill()
-                    default: Rectangle().fill(Color.white.opacity(0.06))
+                    default: Rectangle().fill(Color.primary.opacity(0.06))
                     }
                 }
                 .frame(width: 140, height: 110)

@@ -10,7 +10,7 @@ struct OrtAuswahlScreen: View {
             VStack(spacing: 24) {
                 Text("scoon")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
 
                 Text("Ort auswahl – wie viele Spots")
                     .font(.system(size: 20, weight: .semibold))
@@ -24,7 +24,7 @@ struct OrtAuswahlScreen: View {
             }
             .padding(.horizontal, 32)
         }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
     }
 }
 

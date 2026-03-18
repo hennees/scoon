@@ -1,12 +1,9 @@
 import SwiftUI
 
-// Design: 304:204 – Favorites / Meine Orte
 struct FavoritesScreen: View {
     @Environment(AppRouter.self)    private var router
     @Environment(AppContainer.self) private var container
     @State private var vm: FavoritesViewModel?
-
-    @State private var selectedTab   = NavTab.favorites
     @State private var activeListTab = 0
 
     var body: some View {
@@ -16,30 +13,40 @@ struct FavoritesScreen: View {
             VStack(spacing: 0) {
                 // ── Header ────────────────────────────────────────────
                 HStack {
-                    Text("scoon")
-                        .font(.system(size: 28, weight: .black, design: .rounded))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.white, Color.white.opacity(0.85)],
-                                startPoint: .leading, endPoint: .trailing
-                            )
-                        )
+                    VStack(alignment: .leading, spacing: 2) {
+                        Button(action: { router.switchToHome() }) {
+                            Text("scoon")
+                                .font(.system(size: 28, weight: .black, design: .rounded))
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [Color.primary, Color.scoonOrange],
+                                        startPoint: .leading, endPoint: .trailing
+                                    )
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        Text("Meine Orte")
+                            .font(.system(size: 22, weight: .heavy))
+                            .foregroundColor(.primary)
+                    }
                     Spacer()
-                    HStack(spacing: 12) {
+                    HStack(spacing: 10) {
                         Button(action: {}) {
                             ZStack {
-                                Circle().fill(Color.white.opacity(0.07)).frame(width: 40, height: 40)
+                                Circle().fill(Color.primary.opacity(0.08)).frame(width: 42, height: 42)
+                                    .overlay(Circle().stroke(Color.primary.opacity(0.1), lineWidth: 1))
                                 Image(systemName: "bell.fill")
                                     .font(.system(size: 15, weight: .semibold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.primary)
                             }
                         }
                         Button(action: { router.navigate(to: .settings) }) {
                             ZStack {
-                                Circle().fill(Color.white.opacity(0.07)).frame(width: 40, height: 40)
+                                Circle().fill(Color.primary.opacity(0.08)).frame(width: 42, height: 42)
+                                    .overlay(Circle().stroke(Color.primary.opacity(0.1), lineWidth: 1))
                                 Image(systemName: "gearshape.fill")
                                     .font(.system(size: 15, weight: .semibold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.primary)
                             }
                         }
                     }
@@ -47,69 +54,66 @@ struct FavoritesScreen: View {
                 .padding(.horizontal, 22)
                 .padding(.top, 58)
 
-                Text("Meine Orte")
-                    .font(.system(size: 26, weight: .heavy))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 22)
-                    .padding(.top, 14)
-
-                // ── Tabs ──────────────────────────────────────────────
+                // ── Segment control ───────────────────────────────────
                 HStack(spacing: 0) {
-                    FavTabButton(title: "Meine Favoriten", isActive: activeListTab == 0) { activeListTab = 0 }
-                    FavTabButton(title: "Meine Orte",      isActive: activeListTab == 1) { activeListTab = 1 }
+                    SegmentTabButton(title: "Favoriten", isActive: activeListTab == 0) { activeListTab = 0 }
+                    SegmentTabButton(title: "Meine Orte", isActive: activeListTab == 1) { activeListTab = 1 }
+                }
+                .padding(.horizontal, 22)
+                .padding(.top, 18)
+
+                // ── Action row ────────────────────────────────────────
+                HStack(spacing: 8) {
+                    Button(action: {}) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "arrow.up.arrow.down").font(.system(size: 11))
+                            Text("Neueste").font(.system(size: 13, weight: .medium))
+                        }
+                        .foregroundColor(.white.opacity(0.7))
+                        .padding(.horizontal, 12).padding(.vertical, 7)
+                        .background(Color.primary.opacity(0.07))
+                        .cornerRadius(10)
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.primary.opacity(0.09), lineWidth: 1))
+                    }
+                    Button(action: { router.switchTab(to: .map) }) {
+                        HStack(spacing: 5) {
+                            Image(systemName: "map.fill").font(.system(size: 11))
+                            Text("Karte").font(.system(size: 13, weight: .medium))
+                        }
+                        .foregroundColor(Color.scoonOrange)
+                        .padding(.horizontal, 12).padding(.vertical, 7)
+                        .background(Color.scoonOrange.opacity(0.12))
+                        .cornerRadius(10)
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.scoonOrange.opacity(0.25), lineWidth: 1))
+                    }
+                    Spacer()
+                    if let vm, !vm.favorites.isEmpty {
+                        Text("\(vm.favorites.count) Orte")
+                            .font(.system(size: 13))
+                            .foregroundColor(Color.scoonTextSecondary)
+                    }
                 }
                 .padding(.horizontal, 22)
                 .padding(.top, 14)
-
-                // ── Action row ────────────────────────────────────────
-                HStack(spacing: 10) {
-                    Button(action: {}) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.up.arrow.down").font(.system(size: 12))
-                            Text("Sort: Neueste").font(.system(size: 13, weight: .medium))
-                        }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 14).padding(.vertical, 8)
-                        .background(Color.white.opacity(0.07))
-                        .cornerRadius(8)
-                    }
-                    Button(action: { router.navigate(to: .kartenansicht) }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "map").font(.system(size: 12))
-                            Text("Karte").font(.system(size: 13, weight: .medium))
-                        }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 14).padding(.vertical, 8)
-                        .background(Color.white.opacity(0.07))
-                        .cornerRadius(8)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 22)
-                .padding(.top, 12)
 
                 // ── Content ───────────────────────────────────────────
                 if let vm {
                     if vm.isLoading {
                         Spacer()
-                        ProgressView().tint(Color.scoonOrange)
-                        Spacer()
-                    } else if vm.favorites.isEmpty {
-                        VStack(spacing: 12) {
-                            Image(systemName: "heart.slash")
-                                .font(.system(size: 44))
-                                .foregroundColor(Color.scoonTextSecondary.opacity(0.4))
-                            Text("Noch keine Favoriten")
-                                .font(.system(size: 16))
+                        VStack(spacing: 14) {
+                            ProgressView().tint(Color.scoonOrange).scaleEffect(1.2)
+                            Text("Lade deine Orte …")
+                                .font(.system(size: 13))
                                 .foregroundColor(Color.scoonTextSecondary)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 60)
+                        Spacer()
+                    } else if vm.favorites.isEmpty {
+                        Spacer()
+                        FavoritesEmptyState { router.switchTab(to: .home) }
                         Spacer()
                     } else {
                         ScrollView(showsIndicators: false) {
-                            VStack(spacing: 14) {
+                            VStack(spacing: 12) {
                                 ForEach(vm.favorites) { spot in
                                     FavoriteSpotRow(spot: spot) {
                                         router.navigate(to: .placeInfo(spot))
@@ -119,9 +123,10 @@ struct FavoritesScreen: View {
                                 }
                             }
                             .padding(.horizontal, 22)
-                            .padding(.top, 14)
-                            .padding(.bottom, 100)
+                            .padding(.top, 16)
+                            .padding(.bottom, 110)
                         }
+                        .refreshable { await vm.refresh() }
                     }
                 } else {
                     Spacer()
@@ -135,10 +140,8 @@ struct FavoritesScreen: View {
                         .padding(.bottom, 90)
                 }
             }
-
-            NavBarView(selectedTab: $selectedTab)
         }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .task {
             let viewModel = container.makeFavoritesViewModel()
             vm = viewModel
@@ -147,26 +150,55 @@ struct FavoritesScreen: View {
     }
 }
 
-// MARK: – Tab Button
+// MARK: – Empty State
 
-private struct FavTabButton: View {
-    let title: String
-    let isActive: Bool
-    let action: () -> Void
+private struct FavoritesEmptyState: View {
+    let onExplore: () -> Void
+    @State private var pulse = false
 
     var body: some View {
-        Button(action: action) {
+        VStack(spacing: 20) {
+            ZStack {
+                Circle()
+                    .fill(Color.scoonOrange.opacity(0.08))
+                    .frame(width: 100, height: 100)
+                    .scaleEffect(pulse ? 1.1 : 1.0)
+                    .animation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true), value: pulse)
+                Circle()
+                    .fill(Color.scoonOrange.opacity(0.14))
+                    .frame(width: 76, height: 76)
+                Image(systemName: "heart.slash.fill")
+                    .font(.system(size: 30))
+                    .foregroundColor(Color.scoonOrange.opacity(0.6))
+            }
+            .onAppear { pulse = true }
+
             VStack(spacing: 6) {
-                Text(title)
-                    .font(.system(size: 15, weight: isActive ? .semibold : .regular))
-                    .foregroundColor(isActive ? Color.scoonOrange : Color.scoonTextSecondary)
-                Rectangle()
-                    .fill(isActive ? Color.scoonOrange : Color.clear)
-                    .frame(height: 2)
+                Text("Noch keine Favoriten")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.primary)
+                Text("Entdecke Fotospots und speichere\ndeine Lieblinge hier.")
+                    .font(.system(size: 14))
+                    .foregroundColor(Color.scoonTextSecondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button(action: onExplore) {
+                HStack(spacing: 8) {
+                    Image(systemName: "safari.fill")
+                    Text("Spots entdecken")
+                        .fontWeight(.semibold)
+                }
+                .font(.system(size: 15))
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(Color.scoonOrange)
+                .cornerRadius(14)
+                .shadow(color: Color.scoonOrange.opacity(0.4), radius: 10, x: 0, y: 4)
             }
         }
-        .frame(maxWidth: .infinity)
-        .animation(.spring(response: 0.25, dampingFraction: 0.7), value: isActive)
+        .padding(.horizontal, 40)
     }
 }
 
@@ -178,27 +210,31 @@ private struct FavoriteSpotRow: View {
     let onToggle: () -> Void
 
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
+        HStack(alignment: .center, spacing: 14) {
             // Thumbnail
             AsyncImage(url: URL(string: spot.imageURL)) { phase in
                 switch phase {
                 case .success(let img): img.resizable().scaledToFill()
-                default: Rectangle().fill(Color.white.opacity(0.06))
-                    .overlay(Image(systemName: "photo").foregroundColor(.white.opacity(0.2)))
+                default:
+                    Rectangle()
+                        .fill(Color.primary.opacity(0.07))
+                        .overlay(
+                            Image(systemName: "photo")
+                                .font(.system(size: 20))
+                                .foregroundColor(.white.opacity(0.18))
+                        )
                 }
             }
-            .frame(width: 80, height: 80)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .frame(width: 78, height: 78)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
 
             // Info
             VStack(alignment: .leading, spacing: 4) {
                 Text(spot.name)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                Text(spot.description)
-                    .font(.system(size: 13))
-                    .foregroundColor(Color.scoonTextSecondary)
-                    .lineLimit(2)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+
                 HStack(spacing: 4) {
                     Image(systemName: "mappin.fill")
                         .font(.system(size: 10))
@@ -206,31 +242,47 @@ private struct FavoriteSpotRow: View {
                     Text(spot.location)
                         .font(.system(size: 12))
                         .foregroundColor(Color.scoonTextSecondary)
+                        .lineLimit(1)
                 }
-                .padding(.top, 2)
-                Text("Auf der Karte")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(Color.scoonOrange)
-                    .padding(.top, 2)
+
+                HStack(spacing: 4) {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(Color.scoonOrange)
+                    Text(String(format: "%.1f", spot.rating))
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.primary)
+                    Text("·")
+                        .foregroundColor(Color.scoonTextSecondary.opacity(0.4))
+                    Text(spot.category.rawValue)
+                        .font(.system(size: 12))
+                        .foregroundColor(Color.scoonTextSecondary)
+                }
             }
 
             Spacer()
 
-            // Heart
+            // Heart toggle
             Button(action: onToggle) {
-                Image(systemName: spot.isFavorite ? "heart.fill" : "heart")
-                    .foregroundColor(spot.isFavorite ? Color.scoonOrange : Color.scoonTextSecondary)
-                    .font(.system(size: 18))
+                ZStack {
+                    Circle()
+                        .fill(spot.isFavorite ? Color.scoonOrange.opacity(0.15) : Color.primary.opacity(0.07))
+                        .frame(width: 38, height: 38)
+                    Image(systemName: spot.isFavorite ? "heart.fill" : "heart")
+                        .foregroundColor(spot.isFavorite ? Color.scoonOrange : Color.scoonTextSecondary)
+                        .font(.system(size: 16, weight: .semibold))
+                }
             }
             .buttonStyle(.plain)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: spot.isFavorite)
         }
         .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.white.opacity(0.05))
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.primary.opacity(0.05))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 18)
+                        .stroke(Color.primary.opacity(0.08), lineWidth: 1)
                 )
         )
         .contentShape(Rectangle())

@@ -26,7 +26,23 @@ final class HomeViewModel {
     }
 
     func onAppear() async {
+        startObservingSpotCreated()
         guard spots.isEmpty else { return }
+        await load(for: activeFilter)
+    }
+
+    private func startObservingSpotCreated() {
+        guard loadTask == nil else { return }
+        loadTask = Task { [weak self] in
+            for await _ in NotificationCenter.default.notifications(named: .spotCreated) {
+                guard let self else { break }
+                self.spots = []
+                await self.load(for: self.activeFilter)
+            }
+        }
+    }
+
+    func refresh() async {
         await load(for: activeFilter)
     }
 

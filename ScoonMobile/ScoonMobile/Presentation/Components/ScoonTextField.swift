@@ -22,12 +22,12 @@ struct ScoonTextField: View {
                     if isSecure && !showPassword {
                         SecureField(placeholder, text: $text)
                             .foregroundColor(
-                                isDark ? Color.white.opacity(0.5) : Color.black.opacity(0.5)
+                                isDark ? Color.primary.opacity(0.5) : Color.black.opacity(0.5)
                             )
                     } else {
                         TextField(placeholder, text: $text)
                             .foregroundColor(
-                                isDark ? Color.white.opacity(0.5) : Color.black.opacity(0.5)
+                                isDark ? Color.primary.opacity(0.5) : Color.black.opacity(0.5)
                             )
                     }
                 }
@@ -39,7 +39,7 @@ struct ScoonTextField: View {
                     Button(action: { showPassword.toggle() }) {
                         Image(systemName: showPassword ? "eye" : "eye.slash")
                             .foregroundColor(
-                                isDark ? Color.white.opacity(0.5) : Color.black.opacity(0.5)
+                                isDark ? Color.primary.opacity(0.5) : Color.black.opacity(0.5)
                             )
                     }
                 }

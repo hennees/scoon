@@ -5,7 +5,6 @@ enum NavTab {
 }
 
 struct NavBarView: View {
-    @Binding var selectedTab: NavTab
     @Environment(AppRouter.self) private var router
 
     private let items: [(icon: String, tab: NavTab)] = [
@@ -20,29 +19,35 @@ struct NavBarView: View {
             ForEach(items, id: \.tab.hashValue) { item in
                 NavBarItem(
                     systemIcon: item.icon,
-                    tab: item.tab,
-                    selected: $selectedTab,
-                    onNavigate: { router.switchTab(to: item.tab) }
+                    isSelected: router.selectedTab == item.tab,
+                    onTap:      { router.selectedTab = item.tab }
                 )
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 14)
-        .padding(.bottom, 10)
+        .padding(.horizontal, 12)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
         .frame(maxWidth: .infinity)
         .background(
             ZStack {
-                Color.scoonNavBar
-                // Subtle top separator line
+                // Adaptive blur layer — inherits the current color scheme
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+
+                // Adaptive tint: near-black in dark, near-white in light
+                Rectangle()
+                    .fill(Color.scoonNavBar.opacity(0.6))
+
+                // Top separator
                 VStack {
                     Rectangle()
-                        .fill(Color.white.opacity(0.07))
-                        .frame(height: 1)
+                        .fill(Color.primary.opacity(0.08))
+                        .frame(height: 0.5)
                     Spacer()
                 }
             }
-            .clipShape(.rect(topLeadingRadius: 22, bottomLeadingRadius: 0,
-                             bottomTrailingRadius: 0, topTrailingRadius: 22))
+            .clipShape(.rect(topLeadingRadius: 24, bottomLeadingRadius: 0,
+                             bottomTrailingRadius: 0, topTrailingRadius: 24))
             .ignoresSafeArea(.container, edges: .bottom)
         )
     }
@@ -50,38 +55,35 @@ struct NavBarView: View {
 
 private struct NavBarItem: View {
     let systemIcon: String
-    let tab:        NavTab
-    @Binding var selected: NavTab
-    let onNavigate: () -> Void
-
-    var isSelected: Bool { selected == tab }
+    let isSelected: Bool
+    let onTap:      () -> Void
 
     var body: some View {
-        Button(action: {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                selected = tab
-            }
-            onNavigate()
-        }) {
-            ZStack {
-                // Active pill background
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color.scoonOrange.opacity(isSelected ? 0.18 : 0))
-                    .frame(width: 54, height: 40)
-                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+        Button(action: onTap) {
+            VStack(spacing: 5) {
+                ZStack {
+                    // Active pill background
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.scoonOrange.opacity(isSelected ? 0.18 : 0))
+                        .frame(width: 50, height: 34)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
 
-                Image(systemName: systemIcon)
-                    .font(.system(size: 21, weight: isSelected ? .semibold : .regular))
-                    .foregroundStyle(
-                        isSelected
-                            ? Color.scoonOrange
-                            : Color.white.opacity(0.38)
-                    )
-                    .scaleEffect(isSelected ? 1.12 : 1.0)
-                    .animation(.spring(response: 0.25, dampingFraction: 0.65), value: isSelected)
+                    Image(systemName: systemIcon)
+                        .font(.system(size: 20, weight: isSelected ? .semibold : .regular))
+                        .foregroundStyle(isSelected ? Color.scoonOrange : Color.primary.opacity(0.35))
+                        .scaleEffect(isSelected ? 1.08 : 1.0)
+                        .animation(.spring(response: 0.28, dampingFraction: 0.65), value: isSelected)
+                }
+
+                // Active dot
+                Circle()
+                    .fill(Color.scoonOrange)
+                    .frame(width: 4, height: 4)
+                    .opacity(isSelected ? 1 : 0)
+                    .scaleEffect(isSelected ? 1 : 0.1)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 4)
         }
         .buttonStyle(.plain)
     }

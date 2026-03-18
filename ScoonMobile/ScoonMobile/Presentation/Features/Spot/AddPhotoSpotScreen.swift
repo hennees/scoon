@@ -1,11 +1,13 @@
 import SwiftUI
 import MapKit
+import PhotosUI
 
-// Design: 560:1271 – Add Photo Spot
 struct AddPhotoSpotScreen: View {
     @Environment(AppRouter.self)    private var router
     @Environment(AppContainer.self) private var container
     @State private var vm: AddSpotViewModel?
+
+    @State private var photoItems: [PhotosPickerItem] = []
 
     @State private var region = MKCoordinateRegion(
         center:             CLLocationCoordinate2D(latitude: 47.0707, longitude: 15.4395),
@@ -20,9 +22,10 @@ struct AddPhotoSpotScreen: View {
             if let vm {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        // ── Header ────────────────────────────────────
+
+                        // ── Header ──────────────────────────────────────
                         HStack {
-                            Text("Add Photo Spot")
+                            Text("Spot hinzufügen")
                                 .font(.system(size: 22, weight: .bold))
                                 .foregroundColor(Color.scoonDarker)
                             Spacer()
@@ -38,7 +41,7 @@ struct AddPhotoSpotScreen: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 56)
 
-                        // ── Name ──────────────────────────────────────
+                        // ── Name ────────────────────────────────────────
                         FieldLabel(title: "Name")
                         LightTextField(
                             placeholder: "Name des Spots",
@@ -46,15 +49,15 @@ struct AddPhotoSpotScreen: View {
                         )
                         .padding(.horizontal, 20)
 
-                        // ── Location ──────────────────────────────────
-                        FieldLabel(title: "Location")
+                        // ── Location ────────────────────────────────────
+                        FieldLabel(title: "Standort")
                         LightTextField(
                             placeholder: "z.B. Graz, Austria",
                             text: Binding(get: { vm.location }, set: { vm.location = $0 })
                         )
                         .padding(.horizontal, 20)
 
-                        // ── Category ──────────────────────────────────
+                        // ── Category ────────────────────────────────────
                         FieldLabel(title: "Kategorie")
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
@@ -78,7 +81,7 @@ struct AddPhotoSpotScreen: View {
                             .padding(.horizontal, 20)
                         }
 
-                        // ── Map preview ───────────────────────────────
+                        // ── Map preview ─────────────────────────────────
                         Map(coordinateRegion: $region, annotationItems: [MapPin(coord: region.center)]) { pin in
                             MapAnnotation(coordinate: pin.coord) {
                                 Image(systemName: "mappin.circle.fill")
@@ -91,7 +94,7 @@ struct AddPhotoSpotScreen: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 12)
 
-                        // ── Description ───────────────────────────────
+                        // ── Description ─────────────────────────────────
                         FieldLabel(title: "Beschreibung")
                         ZStack(alignment: .topLeading) {
                             RoundedRectangle(cornerRadius: 10)
@@ -115,40 +118,18 @@ struct AddPhotoSpotScreen: View {
                         .frame(height: 100)
                         .padding(.horizontal, 20)
 
-                        // ── Photos ────────────────────────────────────
+                        // ── Photos ──────────────────────────────────────
                         FieldLabel(title: "Fotos")
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.scoonBorder, style: StrokeStyle(lineWidth: 2, dash: [6]))
-                                .background(Color.white.cornerRadius(12))
-                            VStack(spacing: 12) {
-                                Image(systemName: "photo.on.rectangle.angled")
-                                    .font(.system(size: 36))
-                                    .foregroundColor(Color.scoonTextSecondary)
-                                HStack(spacing: 12) {
-                                    Button(action: {}) {
-                                        Text("Add Photos")
-                                            .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 20).padding(.vertical, 10)
-                                            .background(Color.scoonOrange)
-                                            .cornerRadius(8)
-                                    }
-                                    Button(action: {}) {
-                                        Text("Add Tags")
-                                            .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(Color.scoonOrange)
-                                            .padding(.horizontal, 20).padding(.vertical, 10)
-                                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.scoonOrange, lineWidth: 1))
-                                    }
-                                }
-                            }
-                            .padding(.vertical, 24)
-                        }
-                        .frame(height: 130)
+                        PhotosPickerSection(
+                            selectedImages: Binding(
+                                get: { vm.selectedImages },
+                                set: { vm.selectedImages = $0 }
+                            ),
+                            photoItems: $photoItems
+                        )
                         .padding(.horizontal, 20)
 
-                        // ── Error ─────────────────────────────────────
+                        // ── Error ────────────────────────────────────────
                         if let error = vm.error {
                             HStack(spacing: 8) {
                                 Image(systemName: "exclamationmark.circle.fill")
@@ -165,13 +146,20 @@ struct AddPhotoSpotScreen: View {
                             .padding(.top, 12)
                         }
 
-                        // ── Submit ────────────────────────────────────
+                        // ── Submit ───────────────────────────────────────
                         Button(action: { Task { await vm.submit() } }) {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 12)
                                     .fill(vm.isValid ? Color.scoonOrange : Color.scoonOrange.opacity(0.5))
                                 if vm.isLoading {
-                                    ProgressView().tint(.white)
+                                    VStack(spacing: 6) {
+                                        ProgressView().tint(.white)
+                                        if !vm.selectedImages.isEmpty {
+                                            Text("Fotos werden hochgeladen…")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(.white.opacity(0.8))
+                                        }
+                                    }
                                 } else {
                                     Text("Spot hinzufügen")
                                         .font(.system(size: 16, weight: .semibold))
@@ -181,7 +169,7 @@ struct AddPhotoSpotScreen: View {
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
                         }
-                        .disabled(vm.isLoading)
+                        .disabled(!vm.isValid || vm.isLoading)
                         .padding(.horizontal, 20)
                         .padding(.top, 24)
                         .padding(.bottom, 40)
@@ -193,12 +181,107 @@ struct AddPhotoSpotScreen: View {
                 }
             }
         }
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             if vm == nil { vm = container.makeAddSpotViewModel() }
         }
     }
 }
+
+// MARK: – Photos picker section
+
+private struct PhotosPickerSection: View {
+    @Binding var selectedImages: [UIImage]
+    @Binding var photoItems:     [PhotosPickerItem]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if selectedImages.isEmpty {
+                // Empty state – dashed drop zone
+                PhotosPicker(
+                    selection: $photoItems,
+                    maxSelectionCount: 6,
+                    matching: .images
+                ) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.scoonBorder, style: StrokeStyle(lineWidth: 2, dash: [6]))
+                            .background(Color.white.cornerRadius(12))
+                        VStack(spacing: 12) {
+                            Image(systemName: "photo.on.rectangle.angled")
+                                .font(.system(size: 36))
+                                .foregroundColor(Color.scoonTextSecondary)
+                            Text("Fotos hinzufügen")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 20).padding(.vertical, 10)
+                                .background(Color.scoonOrange)
+                                .cornerRadius(8)
+                        }
+                        .padding(.vertical, 24)
+                    }
+                    .frame(height: 130)
+                }
+                .buttonStyle(.plain)
+            } else {
+                // Thumbnail grid + add more button
+                let columns = [GridItem(.adaptive(minimum: 80), spacing: 8)]
+                LazyVGrid(columns: columns, spacing: 8) {
+                    ForEach(selectedImages.indices, id: \.self) { i in
+                        ZStack(alignment: .topTrailing) {
+                            Image(uiImage: selectedImages[i])
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 80, height: 80)
+                                .clipped()
+                                .cornerRadius(8)
+                            Button(action: { selectedImages.remove(at: i) }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.white)
+                                    .background(Color.black.opacity(0.5).clipShape(Circle()))
+                                    .font(.system(size: 18))
+                            }
+                            .padding(4)
+                        }
+                    }
+
+                    if selectedImages.count < 6 {
+                        PhotosPicker(
+                            selection: $photoItems,
+                            maxSelectionCount: 6,
+                            matching: .images
+                        ) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.white)
+                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.scoonBorder, lineWidth: 1))
+                                Image(systemName: "plus")
+                                    .font(.system(size: 22))
+                                    .foregroundColor(Color.scoonOrange)
+                            }
+                            .frame(width: 80, height: 80)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        .onChange(of: photoItems) { _, items in
+            Task {
+                var images: [UIImage] = []
+                for item in items {
+                    if let data = try? await item.loadTransferable(type: Data.self),
+                       let img  = UIImage(data: data) {
+                        images.append(img)
+                    }
+                }
+                selectedImages = images
+            }
+        }
+    }
+}
+
+// MARK: – Helpers
 
 private struct MapPin: Identifiable {
     let id = UUID()

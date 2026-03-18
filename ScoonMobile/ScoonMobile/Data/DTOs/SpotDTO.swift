@@ -1,18 +1,19 @@
 import Foundation
 
 /// Codable mirror of the Supabase spots_with_favorites view.
-/// Field names match snake_case columns; JSONDecoder uses .convertFromSnakeCase.
+/// Properties use camelCase to match JSONDecoder's .convertFromSnakeCase strategy,
+/// which converts JSON keys like "image_url" → "imageUrl" before matching.
 struct SpotDTO: Codable {
     let id:          String
     let name:        String
     let location:    String
     let rating:      Double
-    let image_url:   String
-    let is_favorite: Bool
+    let imageUrl:    String
+    let isFavorite:  Bool
     let description: String
-    let view_count:  Int
-    let like_count:  Int
-    let save_count:  Int
+    let viewCount:   Int
+    let likeCount:   Int
+    let saveCount:   Int
     let distance:    String?
     let category:    String
     let latitude:    Double?

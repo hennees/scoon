@@ -12,7 +12,7 @@ struct ErrorBanner: View {
 
             Text(message)
                 .font(.system(size: 13))
-                .foregroundColor(.white)
+                .foregroundColor(.primary)
                 .lineLimit(2)
 
             Spacer()
@@ -21,10 +21,10 @@ struct ErrorBanner: View {
                 Button(action: onRetry) {
                     Text("Retry")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.primary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(Color.white.opacity(0.15))
+                        .background(Color.primary.opacity(0.15))
                         .cornerRadius(6)
                 }
             }

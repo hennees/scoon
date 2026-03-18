@@ -152,6 +152,11 @@ final class RemoteSpotRepository: SpotRepositoryProtocol {
         let dto = try await apiClient.send(request, as: SpotDTO.self)
         return SpotMapper.map(dto)
     }
+
+    func addPhotosToSpot(spotID: UUID, imageURLs: [String]) async throws {
+        // Stub: image URLs are stored in a `spot_photos` table when backend supports it.
+        // For now, a no-op so the remote mode doesn't crash.
+    }
 }
 
 private struct SpotIDDTO: Decodable {

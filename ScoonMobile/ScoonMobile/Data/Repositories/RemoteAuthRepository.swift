@@ -124,7 +124,8 @@ final class RemoteAuthRepository: AuthRepositoryProtocol {
             avatarURL:      supabaseUser.userMetadata?.avatarUrl ?? "",
             postCount:      0,
             followerCount:  0,
-            followingCount: 0
+            followingCount: 0,
+            isCreator:      false
         )
     }
 
@@ -150,7 +151,8 @@ final class RemoteAuthRepository: AuthRepositoryProtocol {
             username: dto.userMetadata?.username ?? dto.email?.components(separatedBy: "@").first ?? "User",
             email:    dto.email ?? "",
             bio: "", avatarURL: dto.userMetadata?.avatarUrl ?? "",
-            postCount: 0, followerCount: 0, followingCount: 0
+            postCount: 0, followerCount: 0, followingCount: 0,
+            isCreator: false
         )
     }
 
@@ -173,7 +175,8 @@ final class RemoteAuthRepository: AuthRepositoryProtocol {
             avatarURL:      session.user.userMetadata?.avatarUrl ?? "",
             postCount:      0,
             followerCount:  0,
-            followingCount: 0
+            followingCount: 0,
+            isCreator:      false
         )
     }
 
