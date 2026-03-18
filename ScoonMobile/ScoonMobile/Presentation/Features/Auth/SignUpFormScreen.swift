@@ -1,100 +1,163 @@
 import SwiftUI
 
-// Design: 619:856 – Sign Up 3
-// Dark theme: username / email / password, terms checkbox, submit button.
+/// Registrierung per E-Mail – vollständig mit AuthViewModel verdrahtet
 struct SignUpFormScreen: View {
-    @Environment(AppRouter.self) private var router
-
-    @State private var username = ""
-    @State private var email    = ""
-    @State private var password = ""
-    @State private var accepted = true
+    @Environment(AppRouter.self)    private var router
+    @Environment(AppContainer.self) private var container
+    @State private var vm: AuthViewModel?
 
     var body: some View {
         ZStack {
-            Color.scoonDark.ignoresSafeArea()
+            Color.black.ignoresSafeArea()
 
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
-                    // Logo (top-left, small)
-                    Text("scoon")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                        .padding(.top, 46)
-                        .padding(.leading, 15)
-
-                    // Heading
-                    Text("Account erstellen")
-                        .font(.system(size: 30, weight: .bold))
-                        .foregroundColor(.white)
-                        .tracking(-0.3)
-                        .padding(.top, 60)
-                        .padding(.leading, 22)
-
-                    VStack(spacing: 0) {
-                        // Username
-                        ScoonTextField(label: "Username", placeholder: "Your username", text: $username)
-                            .padding(.top, 32)
-
-                        // Email
-                        ScoonTextField(label: "Email", placeholder: "Your email", text: $email)
-                            .keyboardType(.emailAddress)
-                            .padding(.top, 20)
-
-                        // Password
-                        ScoonTextField(label: "Password", placeholder: "", text: $password, isSecure: true)
-                            .padding(.top, 20)
+                    // Back
+                    Button(action: { router.navigateBack() }) {
+                        Image(systemName: "arrow.left")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.white)
+                            .frame(width: 44, height: 44)
                     }
-                    .padding(.horizontal, 15)
+                    .padding(.top, 52)
 
-                    // Terms checkbox
-                    HStack(spacing: 10) {
-                        Button(action: { accepted.toggle() }) {
-                            Image(systemName: accepted ? "checkmark.circle.fill" : "circle")
-                                .resizable()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(accepted ? Color.scoonOrange : .white.opacity(0.5))
-                        }
-                        Text("I accept the terms and privacy policy")
-                            .font(.system(size: 14))
+                    // Headline
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("scoon")
+                            .font(.system(size: 22, weight: .black, design: .rounded))
+                            .foregroundColor(Color.scoonOrange)
+                        Text("Konto erstellen")
+                            .font(.system(size: 30, weight: .bold))
                             .foregroundColor(.white)
                     }
                     .padding(.top, 28)
-                    .padding(.horizontal, 15)
 
-                    // Submit button
-                    Button(action: {
-                        router.navigate(to: .home)
-                    }) {
-                        Text("Account erstellen")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(Color.scoonDark)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(.white)
-                            .cornerRadius(10)
-                    }
-                    .padding(.horizontal, 15)
-                    .padding(.top, 28)
+                    if let vm {
+                        VStack(spacing: 16) {
+                            // Benutzername
+                            AuthField(label: "Benutzername", placeholder: "dein_benutzername",
+                                      text: Binding(get: { vm.username }, set: { vm.username = $0 }),
+                                      keyboard: .default)
 
-                    // Already have an account link
-                    HStack(spacing: 4) {
-                        Text("Bereits ein Konto?")
-                            .foregroundColor(.white.opacity(0.7))
-                        Button(action: { router.navigate(to: .login) }) {
-                            Text("Jetzt anmelden!")
-                                .foregroundColor(Color.scoonOrange)
-                                .underline()
-                                .fontWeight(.semibold)
+                            // E-Mail
+                            AuthField(label: "E-Mail-Adresse", placeholder: "name@beispiel.de",
+                                      text: Binding(get: { vm.email }, set: { vm.email = $0 }),
+                                      keyboard: .emailAddress)
+
+                            // Passwort
+                            AuthField(label: "Passwort", placeholder: "Mind. 8 Zeichen",
+                                      text: Binding(get: { vm.password }, set: { vm.password = $0 }),
+                                      keyboard: .default, isSecure: true)
                         }
+                        .padding(.top, 36)
+
+                        // Error
+                        if let error = vm.error {
+                            HStack(spacing: 8) {
+                                Image(systemName: "exclamationmark.circle.fill").foregroundColor(.red)
+                                Text(error).font(.system(size: 13)).foregroundColor(.red)
+                            }
+                            .padding(12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.red.opacity(0.1))
+                            .cornerRadius(10)
+                            .padding(.top, 12)
+                        }
+
+                        // Submit
+                        Button(action: { Task { await vm.signUp() } }) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(vm.isSignUpValid ? Color.scoonOrange : Color.scoonOrange.opacity(0.4))
+                                if vm.isLoading {
+                                    ProgressView().tint(.white)
+                                } else {
+                                    Text("Konto erstellen")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.white)
+                                }
+                            }
+                            .frame(maxWidth: .infinity).frame(height: 56)
+                        }
+                        .disabled(!vm.isSignUpValid || vm.isLoading)
+                        .padding(.top, 28)
+
+                        // Terms
+                        Text("Mit der Registrierung stimmst du unseren Nutzungsbedingungen und der Datenschutzerklärung zu.")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.35))
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 16)
+
+                        // Login link
+                        HStack(spacing: 4) {
+                            Text("Bereits ein Konto?")
+                                .foregroundColor(.white.opacity(0.45))
+                            Button(action: { router.navigate(to: .login) }) {
+                                Text("Anmelden")
+                                    .foregroundColor(Color.scoonOrange)
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                        .font(.system(size: 14))
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 20)
+                        .padding(.bottom, 48)
+
+                        // Navigation on success
+                        let _ = vm.isSuccess  // observe
                     }
-                    .font(.system(size: 14))
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 28)
-                    .padding(.bottom, 40)
                 }
+                .padding(.horizontal, 24)
             }
         }
         .navigationBarHidden(true)
+        .onAppear { if vm == nil { vm = container.makeAuthViewModel() } }
+        .onChange(of: vm?.isSuccess) { _, success in
+            guard success == true else { return }
+            router.navigateToRoot()
+            router.navigate(to: .home)
+        }
+    }
+}
+
+// MARK: – Shared Auth TextField
+
+struct AuthField: View {
+    let label:       String
+    let placeholder: String
+    @Binding var text: String
+    var keyboard:    UIKeyboardType = .default
+    var isSecure:    Bool           = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(label)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(.white.opacity(0.5))
+                .textCase(.uppercase)
+                .tracking(0.8)
+
+            Group {
+                if isSecure {
+                    SecureField(placeholder, text: $text)
+                } else {
+                    TextField(placeholder, text: $text)
+                        .keyboardType(keyboard)
+                        .autocapitalization(.none)
+                        .autocorrectionDisabled()
+                }
+            }
+            .font(.system(size: 16))
+            .foregroundColor(.white)
+            .padding(.horizontal, 16)
+            .frame(height: 52)
+            .background(Color.white.opacity(0.07))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+            )
+        }
     }
 }

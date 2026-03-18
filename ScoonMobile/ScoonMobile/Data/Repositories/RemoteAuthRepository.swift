@@ -90,7 +90,7 @@ final class RemoteAuthRepository: AuthRepositoryProtocol {
                 continuation.resume(returning: fragment)
             }
             session.presentationContextProvider = WebAuthContext.shared
-            session.prefersEphemeralWebBrowserSession = false
+            session.prefersEphemeralWebBrowserSession = true  // always show account picker
             session.start()
         }
 

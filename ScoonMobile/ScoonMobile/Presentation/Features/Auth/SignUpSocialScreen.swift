@@ -1,125 +1,189 @@
 import SwiftUI
 
-// Design: 619:875 – Sign Up 1
-// Light card (upper ~83%) with logo + text; dark lower section with social buttons.
+/// Registrierung – Methode wählen: Google oder E-Mail
 struct SignUpSocialScreen: View {
-    @Environment(AppRouter.self) private var router
-
-    // Figma asset URLs (valid ~7 days from design export)
-    private let googleLogoURL = "https://www.figma.com/api/mcp/asset/0a1d3e6f-afa1-46a7-89b0-83f53bd251e2"
-    private let messageIconURL = "https://www.figma.com/api/mcp/asset/a39d5741-3cb9-482f-8d88-1d060368d722"
+    @Environment(AppRouter.self)    private var router
+    @Environment(AppContainer.self) private var container
+    @State private var vm: AuthViewModel?
 
     var body: some View {
         ZStack {
-            Color.scoonDark.ignoresSafeArea()
+            Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Light card
-                ZStack(alignment: .top) {
-                    RoundedRectangle(cornerRadius: 32)
-                        .fill(Color.scoonCardLight)
+                // Back
+                HStack {
+                    Button(action: { router.navigateBack() }) {
+                        Image(systemName: "arrow.left")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.white)
+                            .frame(width: 44, height: 44)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 52)
 
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: 90)
+                Spacer()
 
-                        // Logo
-                        Text("scoon")
-                            .font(.system(size: 72, weight: .black, design: .rounded))
-                            .foregroundColor(.black)
+                VStack(spacing: 8) {
+                    Text("scoon")
+                        .font(.system(size: 32, weight: .black, design: .rounded))
+                        .foregroundColor(.white)
 
-                        Spacer().frame(height: 24)
+                    Text("Konto erstellen")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.top, 4)
 
-                        // Heading
-                        Text("Entdecke scoon")
-                            .font(.system(size: 30, weight: .bold))
-                            .foregroundColor(.black)
-                            .tracking(-0.3)
+                    Text("Wähle eine Registrierungsmethode")
+                        .font(.system(size: 15))
+                        .foregroundColor(.white.opacity(0.45))
+                        .padding(.top, 8)
+                }
 
-                        Spacer().frame(height: 12)
+                Spacer()
 
-                        // Description
-                        Text(
-                            "Finde die besten Fotospots, teile deine Highlights und entdecke " +
-                            "neue Perspektiven in deiner Stadt."
-                        )
-                        .font(.system(size: 16))
-                        .foregroundColor(Color.black.opacity(0.7))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 28)
+                // Error
+                if let error = vm?.error {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.circle.fill").foregroundColor(.red)
+                        Text(error).font(.system(size: 13)).foregroundColor(.red)
+                    }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.red.opacity(0.1))
+                    .cornerRadius(10)
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 16)
+                }
 
-                        Spacer().frame(height: 48)
+                VStack(spacing: 14) {
+                    // Google
+                    if let vm {
+                        GoogleRegisterButton(isLoading: vm.isLoading) {
+                            Task { await vm.signInWithGoogle() }
+                        }
+                    }
 
-                        // Continue with Google
-                        SocialButton(
-                            icon: { AsyncImage(url: URL(string: "https://www.figma.com/api/mcp/asset/0a1d3e6f-afa1-46a7-89b0-83f53bd251e2")) { img in img.resizable().scaledToFit() } placeholder: { Image(systemName: "g.circle").resizable().scaledToFit() }.frame(width: 20, height: 20) },
-                            label: "Continue with Google"
-                        ) {}
+                    // Divider
+                    HStack {
+                        Rectangle().fill(Color.white.opacity(0.12)).frame(height: 1)
+                        Text("oder")
+                            .font(.system(size: 13))
+                            .foregroundColor(.white.opacity(0.35))
+                            .padding(.horizontal, 14)
+                        Rectangle().fill(Color.white.opacity(0.12)).frame(height: 1)
+                    }
 
-                        Spacer().frame(height: 16)
-
-                        // Continue with Apple
-                        SocialButton(
-                            icon: { Image(systemName: "apple.logo").resizable().scaledToFit().frame(width: 18, height: 20) },
-                            label: "Continue with Apple"
-                        ) {}
-
-                        Spacer().frame(height: 16)
-
-                        // Continue with Email
-                        SocialButton(
-                            icon: { Image(systemName: "envelope").resizable().scaledToFit().frame(width: 20, height: 16) },
-                            label: "Continue with Email"
-                        ) { router.navigate(to: .signUpForm) }
-
-                        Spacer().frame(height: 28)
+                    // E-Mail
+                    Button(action: { router.navigate(to: .signUpForm) }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "envelope.fill")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white)
+                            Text("Mit E-Mail registrieren")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.white)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 20)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(Color.white.opacity(0.08))
+                        .cornerRadius(14)
                     }
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 9)
-                .padding(.top, 39)
+                .padding(.horizontal, 24)
 
-                // Bottom link
-                Spacer()
+                Spacer().frame(height: 32)
+
+                // Login link
                 HStack(spacing: 4) {
                     Text("Bereits ein Konto?")
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundColor(.white.opacity(0.45))
                     Button(action: { router.navigate(to: .login) }) {
-                        Text("Jetzt anmelden!")
-                            .font(.system(size: 14, weight: .semibold))
+                        Text("Anmelden")
                             .foregroundColor(Color.scoonOrange)
-                            .underline()
+                            .fontWeight(.semibold)
                     }
                 }
-                Spacer().frame(height: 32)
+                .font(.system(size: 14))
+
+                Spacer().frame(height: 48)
             }
         }
         .navigationBarHidden(true)
+        .onAppear { if vm == nil { vm = container.makeAuthViewModel() } }
+        .onChange(of: vm?.isSuccess) { _, success in
+            guard success == true else { return }
+            router.navigateToRoot()
+            router.navigate(to: .home)
+        }
     }
 }
 
-private struct SocialButton<Icon: View>: View {
-    @ViewBuilder let icon: Icon
-    let label: String
+private struct GoogleRegisterButton: View {
+    let isLoading: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 14) {
-                icon
-                    .foregroundColor(.white)
-                Text(label)
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle().fill(.white).frame(width: 28, height: 28)
+                    GoogleGMark()
+                }
+                Text("Mit Google fortfahren")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(Color(red: 0.15, green: 0.15, blue: 0.15))
+                Spacer()
+                if isLoading {
+                    ProgressView().tint(.gray).scaleEffect(0.8)
+                }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, 19)
+            .padding(.horizontal, 20)
+            .frame(maxWidth: .infinity)
             .frame(height: 56)
-            .overlay(
-                RoundedRectangle(cornerRadius: 28)
-                    .stroke(Color.scoonBorder, lineWidth: 1)
-            )
+            .background(.white)
+            .cornerRadius(14)
+            .shadow(color: .black.opacity(0.15), radius: 6, x: 0, y: 2)
         }
-        .padding(.horizontal, 20)
+        .disabled(isLoading)
+    }
+}
+
+struct GoogleGMark: View {
+    var body: some View {
+        Canvas { ctx, size in
+            let cx = size.width / 2
+            let cy = size.height / 2
+            let r  = min(size.width, size.height) * 0.42
+            let lw = size.width * 0.18
+
+            let arcs: [(Double, Double, Color)] = [
+                (-30,  90,  Color(red: 0.26, green: 0.52, blue: 0.96)),
+                ( 90,  210, Color(red: 0.92, green: 0.26, blue: 0.21)),
+                (210,  270, Color(red: 0.99, green: 0.73, blue: 0.01)),
+                (270,  330, Color(red: 0.20, green: 0.66, blue: 0.33)),
+            ]
+            for (s, e, c) in arcs {
+                var p = Path()
+                p.addArc(center: CGPoint(x: cx, y: cy), radius: r,
+                         startAngle: .degrees(s), endAngle: .degrees(e), clockwise: false)
+                ctx.stroke(p, with: .color(c), lineWidth: lw)
+            }
+            // Gap
+            var gap = Path()
+            gap.addArc(center: CGPoint(x: cx, y: cy), radius: r,
+                       startAngle: .degrees(-30), endAngle: .degrees(0), clockwise: false)
+            ctx.stroke(gap, with: .color(.white), lineWidth: lw)
+            // Bar
+            var bar = Path()
+            bar.move(to: CGPoint(x: cx, y: cy))
+            bar.addLine(to: CGPoint(x: cx + r, y: cy))
+            ctx.stroke(bar, with: .color(Color(red: 0.26, green: 0.52, blue: 0.96)), lineWidth: lw)
+        }
+        .frame(width: 20, height: 20)
     }
 }

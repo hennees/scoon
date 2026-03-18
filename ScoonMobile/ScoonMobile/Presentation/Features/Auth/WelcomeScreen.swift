@@ -1,77 +1,85 @@
 import SwiftUI
 
-// Design: 619:889 – Opening screen
-// Dark background, headline, description, Einloggen + Account erstellen buttons.
 struct WelcomeScreen: View {
     @Environment(AppRouter.self) private var router
 
     var body: some View {
         ZStack {
-            Color.scoonDark.ignoresSafeArea()
+            Color.black.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 Spacer()
 
-                // Large logo
-                Text("scoon")
-                    .font(.system(size: 72, weight: .black, design: .rounded))
-                    .foregroundColor(.white)
+                // Logo
+                VStack(spacing: 8) {
+                    Text("scoon")
+                        .font(.system(size: 64, weight: .black, design: .rounded))
+                        .foregroundColor(.white)
 
-                Spacer().frame(height: 32)
-
-                // Headline
-                Text("Entdecke neue\nFotospots in deiner Stadt!")
-                    .font(.system(size: 25, weight: .bold))
-                    .foregroundColor(.white)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(4)
-                    .padding(.horizontal, 20)
+                    Text("Entdecke die besten Fotospots\nin deiner Stadt.")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.white.opacity(0.55))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                }
 
                 Spacer()
 
-                // Description
-                Text(
-                    "Finde die besten Orte, teile deine Lieblingsspots und lass dich " +
-                    "inspirieren – alles mit scoon"
-                )
-                .font(.system(size: 17))
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 28)
-
-                Spacer().frame(height: 44)
-
-                // Einloggen
-                Button(action: { router.navigate(to: .login) }) {
-                    Text("Einloggen")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(Color.scoonDark)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(Color.scoonOrange)
-                        .cornerRadius(10)
+                // Feature bullets
+                VStack(spacing: 14) {
+                    FeatureBullet(icon: "camera.fill",     text: "Kuratierte Fotospots im DACH-Raum")
+                    FeatureBullet(icon: "star.fill",       text: "Bewertungen & Empfehlungen der Community")
+                    FeatureBullet(icon: "eurosign.circle", text: "Als Creator Geld verdienen")
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 32)
 
-                Spacer().frame(height: 14)
+                Spacer()
 
-                // Account erstellen
-                Button(action: { router.navigate(to: .signUpSocial) }) {
-                    Text("Account erstellen")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color(white: 0.45), lineWidth: 1)
-                        )
+                // CTA Buttons
+                VStack(spacing: 12) {
+                    Button(action: { router.navigate(to: .signUpSocial) }) {
+                        Text("Kostenlos starten")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(Color.scoonOrange)
+                            .cornerRadius(14)
+                    }
+
+                    Button(action: { router.navigate(to: .login) }) {
+                        Text("Ich habe bereits ein Konto")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(.white.opacity(0.6))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Color.white.opacity(0.06))
+                            .cornerRadius(14)
+                    }
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 24)
 
-                Spacer().frame(height: 50)
+                Spacer().frame(height: 48)
             }
         }
         .navigationBarHidden(true)
+    }
+}
+
+private struct FeatureBullet: View {
+    let icon: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 15))
+                .foregroundColor(Color.scoonOrange)
+                .frame(width: 22)
+            Text(text)
+                .font(.system(size: 15))
+                .foregroundColor(.white.opacity(0.75))
+            Spacer()
+        }
     }
 }
