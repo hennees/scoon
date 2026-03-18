@@ -20,15 +20,18 @@ struct KartenansichtDetailScreen: View {
         Spot(id: UUID(), name: "Uhrturm",     location: "Graz, Austria", rating: 4.7,
              imageURL: "https://www.figma.com/api/mcp/asset/4c92510c-b715-4ba9-b560-fb389c098aad",
              isFavorite: false, description: "Der Uhrturm ist das Wahrzeichen von Graz.",
-             viewCount: 980, likeCount: 310, saveCount: 140, distance: "0.3 km", category: .monuments),
+             viewCount: 980, likeCount: 310, saveCount: 140, distance: "0.3 km", category: .monuments,
+             latitude: 47.0726, longitude: 15.4387),
         Spot(id: UUID(), name: "Haker-Löwe",  location: "Graz, Austria", rating: 4.5,
              imageURL: "https://www.figma.com/api/mcp/asset/5c2eff61-1398-46d1-b246-219c24477e45",
              isFavorite: false, description: "Historisches Stadtzentrum mit beeindruckender Architektur.",
-             viewCount: 420, likeCount: 180, saveCount: 60, distance: "0.7 km", category: .architecture),
+             viewCount: 420, likeCount: 180, saveCount: 60, distance: "0.7 km", category: .architecture,
+             latitude: 47.0708, longitude: 15.4386),
         Spot(id: UUID(), name: "Blumenwiese", location: "Graz, Austria", rating: 4.3,
              imageURL: "https://www.figma.com/api/mcp/asset/ad0ee92b-65cd-4acb-804a-51f27ccd4685",
              isFavorite: false, description: "Wunderschöne Wiese ideal für Naturfotos.",
-             viewCount: 210, likeCount: 95, saveCount: 38, distance: "1.2 km", category: .nature),
+             viewCount: 210, likeCount: 95, saveCount: 38, distance: "1.2 km", category: .nature,
+             latitude: 47.0749, longitude: 15.4415),
     ]
 
     var body: some View {
