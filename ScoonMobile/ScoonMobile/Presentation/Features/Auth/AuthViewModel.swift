@@ -7,9 +7,10 @@ final class AuthViewModel {
     var password: String = ""
     var username: String = ""
 
-    private(set) var isLoading: Bool    = false
-    private(set) var error:     String? = nil
-    private(set) var isSuccess: Bool    = false
+    private(set) var isLoading:   Bool    = false
+    private(set) var error:       String? = nil
+    private(set) var isSuccess:   Bool    = false
+    private(set) var isSignedOut: Bool    = false
 
     private let authRepository: AuthRepositoryProtocol
 
@@ -47,6 +48,19 @@ final class AuthViewModel {
 
     func signInWithGoogle() async {
         await perform { try await self.authRepository.signInWithGoogle() }
+    }
+
+    func signOut() async {
+        isLoading = true
+        error = nil
+        do {
+            try await authRepository.signOut()
+            isSuccess = false
+            isSignedOut = true
+        } catch {
+            self.error = error.localizedDescription
+        }
+        isLoading = false
     }
 
     func clearError() { error = nil }

@@ -117,6 +117,32 @@ struct HomeScreen: View {
                             }
                             .padding(.horizontal, 20)
                             .padding(.top, 14)
+                        } else if vm.filteredSpots.isEmpty {
+                            VStack(spacing: 16) {
+                                Image(systemName: "camera.aperture")
+                                    .font(.system(size: 44))
+                                    .foregroundColor(Color.scoonOrange.opacity(0.5))
+                                Text("Noch keine Spots")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundColor(.white.opacity(0.7))
+                                Text("Sei der Erste und füge einen\nFotospot in deiner Nähe hinzu.")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.white.opacity(0.4))
+                                    .multilineTextAlignment(.center)
+                                Button(action: { router.navigate(to: .addPhotoSpot) }) {
+                                    Text("Spot hinzufügen")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 10)
+                                        .background(Color.scoonOrange)
+                                        .cornerRadius(20)
+                                }
+                                .padding(.top, 4)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 40)
+                            .padding(.horizontal, 20)
                         } else {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 14) {

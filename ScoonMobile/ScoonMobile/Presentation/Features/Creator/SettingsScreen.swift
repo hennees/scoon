@@ -1,13 +1,14 @@
 import SwiftUI
 
-// Design: 343:224 – Settings
-// Dark, "scoon" header, grouped sections with toggles, NavBar (profile active).
 struct SettingsScreen: View {
-    @Environment(AppRouter.self) private var router
+    @Environment(AppRouter.self)    private var router
+    @Environment(AppContainer.self) private var container
 
     @State private var selectedTab      = NavTab.profile
     @State private var darkModeEnabled  = false
     @State private var liveLocation     = true
+    @State private var vm: AuthViewModel?
+    @State private var showSignOutConfirm = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -60,6 +61,29 @@ struct SettingsScreen: View {
                     SettingsDivider()
                     SettingsRow(icon: "info.circle", title: "Impressum", hasExternalLink: true) {}
 
+                    // Sign Out
+                    SectionHeader(title: "Konto")
+
+                    Button(action: { showSignOutConfirm = true }) {
+                        HStack(spacing: 14) {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                                .font(.system(size: 18))
+                                .foregroundColor(.red.opacity(0.8))
+                                .frame(width: 24)
+                            Text("Abmelden")
+                                .font(.system(size: 16))
+                                .foregroundColor(.red.opacity(0.9))
+                            Spacer()
+                            if vm?.isLoading == true {
+                                ProgressView().tint(.red).scaleEffect(0.8)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 14)
+                        .background(Color.scoonDark)
+                    }
+                    .disabled(vm?.isLoading == true)
+
                     Spacer().frame(height: 100)
                 }
             }
@@ -67,6 +91,20 @@ struct SettingsScreen: View {
             NavBarView(selectedTab: $selectedTab)
         }
         .navigationBarHidden(true)
+        .onAppear { if vm == nil { vm = container.makeAuthViewModel() } }
+        .confirmationDialog("Wirklich abmelden?", isPresented: $showSignOutConfirm, titleVisibility: .visible) {
+            Button("Abmelden", role: .destructive) {
+                Task {
+                    await vm?.signOut()
+                    router.navigateToRoot()
+                }
+            }
+            Button("Abbrechen", role: .cancel) {}
+        }
+        .onChange(of: vm?.isSignedOut) { _, signedOut in
+            guard signedOut == true else { return }
+            router.navigateToRoot()
+        }
     }
 }
 
