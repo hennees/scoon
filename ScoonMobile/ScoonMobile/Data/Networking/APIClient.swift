@@ -26,6 +26,11 @@ protocol APIClientProtocol {
 
 struct EmptyResponse: Decodable {}
 
+private struct RefreshSessionDTO: Decodable {
+    let accessToken:  String
+    let refreshToken: String
+}
+
 final class APIClient: APIClientProtocol {
     private let baseURL:         URL
     private let urlSession:      URLSession
@@ -59,6 +64,16 @@ final class APIClient: APIClientProtocol {
             } catch {
                 throw APIError.decodingFailed
             }
+        } catch APIError.unauthorized where request.requiresAuth {
+            try await refreshAccessToken()
+            let retryRequest = try await makeURLRequest(from: request)
+            let (data, response) = try await urlSession.data(for: retryRequest)
+            try validate(response: response)
+            do {
+                return try decoder.decode(type, from: data)
+            } catch {
+                throw APIError.decodingFailed
+            }
         } catch let error as APIError { throw error
         } catch let error as URLError  { throw APIError.transport(error)
         } catch                        { throw APIError.unknown }
@@ -69,12 +84,48 @@ final class APIClient: APIClientProtocol {
         do {
             let (_, response) = try await urlSession.data(for: urlRequest)
             try validate(response: response)
+        } catch APIError.unauthorized where request.requiresAuth {
+            try await refreshAccessToken()
+            let retryRequest = try await makeURLRequest(from: request)
+            let (_, response) = try await urlSession.data(for: retryRequest)
+            try validate(response: response)
         } catch let error as APIError { throw error
         } catch let error as URLError  { throw APIError.transport(error)
         } catch                        { throw APIError.unknown }
     }
 
     // MARK: – Private
+
+    private func refreshAccessToken() async throws {
+        guard let storedRefreshToken = await sessionStore.refreshToken else {
+            throw APIError.unauthorized
+        }
+        guard var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else {
+            throw APIError.invalidBaseURL
+        }
+        components.path = "/auth/v1/token"
+        components.queryItems = [URLQueryItem(name: "grant_type", value: "refresh_token")]
+        guard let url = components.url else { throw APIError.invalidRequest }
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
+        if let key = supabaseAnonKey {
+            urlRequest.setValue(key, forHTTPHeaderField: "apikey")
+        }
+        urlRequest.httpBody = try JSONSerialization.data(withJSONObject: ["refresh_token": storedRefreshToken])
+
+        let (data, response) = try await urlSession.data(for: urlRequest)
+        try validate(response: response)
+        let session = try decoder.decode(RefreshSessionDTO.self, from: data)
+        let currentUserID = await sessionStore.currentUserID ?? UUID()
+        await sessionStore.setSession(
+            accessToken:  session.accessToken,
+            refreshToken: session.refreshToken,
+            userID:       currentUserID
+        )
+    }
 
     private func makeURLRequest(from request: APIRequest) async throws -> URLRequest {
         guard var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else {

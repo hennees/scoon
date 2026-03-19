@@ -121,6 +121,7 @@ struct MainTabView: View {
         case .editProfile(let user):    EditProfileScreen(user: user)
         case .addPhotoToSpot(let spot): AddPhotoToSpotScreen(spot: spot)
         case .becomeCreator:            BecomeCreatorScreen()
+        case .spotList(let filter):     SpotListScreen(filter: filter)
         default:                        EmptyView()
         }
     }

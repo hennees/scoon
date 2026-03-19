@@ -25,4 +25,5 @@ enum AppRoute: Hashable {
     case editProfile(User)    // Profil bearbeiten
     case addPhotoToSpot(Spot) // Foto zu bestehendem Spot hinzufügen
     case becomeCreator        // Creator-Bewerbung
+    case spotList(filter: SpotFilter) // Gefilterte Spot-Liste
 }

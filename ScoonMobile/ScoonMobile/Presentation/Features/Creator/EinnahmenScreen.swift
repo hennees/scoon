@@ -4,6 +4,7 @@ struct EinnahmenScreen: View {
     @Environment(AppRouter.self)    private var router
     @Environment(AppContainer.self) private var container
     @State private var vm: EinnahmenViewModel?
+    @State private var showPayoutDetail = false
 
     private static let currencyFormatter: NumberFormatter = {
         let f = NumberFormatter()
@@ -93,7 +94,7 @@ struct EinnahmenScreen: View {
                                     }
                                 }
 
-                                Button(action: {}) {
+                                Button(action: { showPayoutDetail = true }) {
                                     HStack(spacing: 6) {
                                         Text("Details anzeigen")
                                             .font(.system(size: 14, weight: .semibold))
@@ -120,26 +121,34 @@ struct EinnahmenScreen: View {
                             .padding(.top, 20)
 
                             // ── Filter ────────────────────────────────
-                            Button(action: {}) {
+                            Menu {
+                                Button("Alle Status") { vm.statusFilter = nil }
+                                ForEach(TransactionStatus.allCases, id: \.self) { status in
+                                    Button(status.displayLabel) { vm.statusFilter = status }
+                                }
+                            } label: {
                                 HStack(spacing: 6) {
                                     Image(systemName: "line.3.horizontal.decrease.circle")
                                         .font(.system(size: 14))
-                                    Text("Alle Status")
+                                    Text(vm.statusFilter?.displayLabel ?? "Alle Status")
                                         .font(.system(size: 13, weight: .medium))
                                     Image(systemName: "chevron.down")
                                         .font(.system(size: 11))
                                 }
-                                .foregroundColor(Color.scoonTextSecondary)
+                                .foregroundColor(vm.statusFilter != nil ? Color.scoonOrange : Color.scoonTextSecondary)
                                 .padding(.horizontal, 14).padding(.vertical, 9)
-                                .background(Color.primary.opacity(0.07))
+                                .background(vm.statusFilter != nil ? Color.scoonOrange.opacity(0.12) : Color.primary.opacity(0.07))
                                 .cornerRadius(10)
-                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.primary.opacity(0.09), lineWidth: 1))
+                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(
+                                    vm.statusFilter != nil ? Color.scoonOrange.opacity(0.3) : Color.primary.opacity(0.09),
+                                    lineWidth: 1
+                                ))
                             }
                             .padding(.horizontal, 20)
                             .padding(.top, 16)
 
                             // ── Transactions ──────────────────────────
-                            if vm.transactions.isEmpty {
+                            if vm.filteredTransactions.isEmpty {
                                 VStack(spacing: 16) {
                                     ZStack {
                                         Circle()
@@ -157,7 +166,7 @@ struct EinnahmenScreen: View {
                                 .padding(.vertical, 50)
                             } else {
                                 VStack(spacing: 10) {
-                                    ForEach(vm.transactions) { tx in
+                                    ForEach(vm.filteredTransactions) { tx in
                                         EinnahmenTransactionCard(transaction: tx)
                                     }
                                 }
@@ -177,6 +186,163 @@ struct EinnahmenScreen: View {
             vm = viewModel
             await viewModel.onAppear()
         }
+        .sheet(isPresented: $showPayoutDetail) {
+            if let vm {
+                PayoutDetailSheet(
+                    pendingPayout: vm.pendingPayout,
+                    pendingTransactions: vm.pendingTransactions
+                )
+            }
+        }
+    }
+}
+
+// MARK: – Payout Detail Sheet
+
+private struct PayoutDetailSheet: View {
+    let pendingPayout: Decimal
+    let pendingTransactions: [Transaction]
+    @Environment(\.dismiss) private var dismiss
+
+    private static let currencyFormatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .currency
+        f.currencyCode = "EUR"
+        f.locale = Locale(identifier: "de_AT")
+        return f
+    }()
+
+    private static let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "dd. MMM yyyy"
+        f.locale = Locale(identifier: "de_AT")
+        return f
+    }()
+
+    var body: some View {
+        ZStack {
+            Color.scoonDarker.ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: 0) {
+                // Handle
+                Capsule()
+                    .fill(Color.white.opacity(0.18))
+                    .frame(width: 36, height: 4)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 12)
+
+                // Header
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("NÄCHSTE AUSZAHLUNG")
+                        .font(.system(size: 11, weight: .semibold))
+                        .tracking(1.5)
+                        .foregroundColor(Color.scoonOrange.opacity(0.8))
+                        .padding(.top, 24)
+                    Text(Self.currencyFormatter.string(from: NSDecimalNumber(decimal: pendingPayout)) ?? "0,00 €")
+                        .font(.system(size: 34, weight: .bold))
+                        .foregroundColor(.white)
+
+                    HStack(spacing: 6) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 12))
+                            .foregroundColor(Color.scoonOrange)
+                        Text("Auszahlung am 1. des Monats")
+                            .font(.system(size: 13))
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+                    .padding(.top, 4)
+                }
+                .padding(.horizontal, 24)
+
+                // Divider
+                Rectangle()
+                    .fill(Color.white.opacity(0.07))
+                    .frame(height: 1)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+
+                // Pending list
+                if pendingTransactions.isEmpty {
+                    VStack(spacing: 10) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 28))
+                            .foregroundColor(Color(red: 0.2, green: 0.8, blue: 0.4))
+                        Text("Keine ausstehenden Transaktionen")
+                            .font(.system(size: 14))
+                            .foregroundColor(.white.opacity(0.45))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 30)
+                } else {
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 8) {
+                            ForEach(pendingTransactions) { tx in
+                                HStack(spacing: 12) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color(red: 0.95, green: 0.7, blue: 0.0).opacity(0.15))
+                                            .frame(width: 36, height: 36)
+                                        Image(systemName: "clock.fill")
+                                            .font(.system(size: 15))
+                                            .foregroundColor(Color(red: 0.95, green: 0.7, blue: 0.0))
+                                    }
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("\(NSDecimalNumber(decimal: tx.amount).stringValue) \(tx.currency)")
+                                            .font(.system(size: 15, weight: .semibold))
+                                            .foregroundColor(.white)
+                                        Text(Self.dateFormatter.string(from: tx.date))
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.white.opacity(0.4))
+                                    }
+                                    Spacer()
+                                    Text("Ausstehend")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundColor(Color(red: 0.95, green: 0.7, blue: 0.0))
+                                        .padding(.horizontal, 8).padding(.vertical, 4)
+                                        .background(Color(red: 0.95, green: 0.7, blue: 0.0).opacity(0.12))
+                                        .cornerRadius(6)
+                                }
+                                .padding(12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(Color.white.opacity(0.04))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Color.white.opacity(0.07), lineWidth: 1)
+                                        )
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.top, 16)
+                    }
+                }
+
+                Spacer()
+
+                // Close button
+                Button(action: { dismiss() }) {
+                    Text("Schließen")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.scoonOrange, Color(red: 1.0, green: 0.55, blue: 0.15)],
+                                startPoint: .leading, endPoint: .trailing
+                            )
+                            .cornerRadius(16)
+                        )
+                        .shadow(color: Color.scoonOrange.opacity(0.4), radius: 10, x: 0, y: 4)
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 32)
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationCornerRadius(28)
+        .presentationBackground(Color.scoonDarker)
     }
 }
 

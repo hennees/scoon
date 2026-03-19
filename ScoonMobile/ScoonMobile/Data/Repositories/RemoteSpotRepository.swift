@@ -8,6 +8,7 @@ private struct CreateSpotPayload: Encodable {
     let imageUrl:    String
     let latitude:    Double?
     let longitude:   Double?
+    let creatorId:   String
 }
 
 private struct FavoritePayload: Encodable {
@@ -48,12 +49,16 @@ final class RemoteSpotRepository: SpotRepositoryProtocol {
             queryItems.append(URLQueryItem(name: "order", value: "created_at.desc"))
         }
 
-        let request = APIRequest(
+        queryItems.append(URLQueryItem(name: "limit", value: "50"))
+
+        var request = APIRequest(
             method:       .get,
             path:         APIEndpoints.Spots.list,
             queryItems:   queryItems,
             requiresAuth: true
         )
+        request.headers["Range-Unit"] = "items"
+        request.headers["Range"] = "0-49"
         let dtos = try await apiClient.send(request, as: [SpotDTO].self)
         return dtos.map(SpotMapper.map)
     }
@@ -94,33 +99,24 @@ final class RemoteSpotRepository: SpotRepositoryProtocol {
     func toggleFavorite(spotID: UUID) async throws {
         guard let userID = await sessionStore.currentUserID else { throw APIError.unauthorized }
 
-        // Check if already favorited then DELETE, otherwise INSERT
-        let checkRequest = APIRequest(
-            method:       .get,
-            path:         APIEndpoints.Favorites.list,
-            queryItems:   [
-                URLQueryItem(name: "spot_id", value: "eq.\(spotID.uuidString)"),
-                URLQueryItem(name: "user_id", value: "eq.\(userID.uuidString)"),
-                URLQueryItem(name: "select",  value: "spot_id")
-            ],
-            requiresAuth: true
+        // Upsert with ON CONFLICT DO NOTHING (resolution=ignore-duplicates).
+        // If Supabase returns an empty array, the row already existed → delete it.
+        // This is a single round-trip that eliminates the TOCTOU race of GET-then-write.
+        let payload = FavoritePayload(userId: userID.uuidString, spotId: spotID.uuidString)
+        var insertRequest = APIRequest(
+            method:               .post,
+            path:                 APIEndpoints.Favorites.create,
+            body:                 try payload.asJSONData(),
+            requiresAuth:         true,
+            preferRepresentation: true
         )
+        insertRequest.headers["Prefer"] = "resolution=ignore-duplicates,return=representation"
 
-        let existing = try await apiClient.send(checkRequest, as: [SpotIDDTO].self)
+        let inserted = try await apiClient.send(insertRequest, as: [SpotIDDTO].self)
 
-        if existing.isEmpty {
-            // Add favorite
-            let payload = FavoritePayload(userId: userID.uuidString, spotId: spotID.uuidString)
-            let request = APIRequest(
-                method:       .post,
-                path:         APIEndpoints.Favorites.create,
-                body:         try payload.asJSONData(),
-                requiresAuth: true
-            )
-            try await apiClient.send(request)
-        } else {
-            // Remove favorite
-            let request = APIRequest(
+        if inserted.isEmpty {
+            // Row already existed and was not inserted → remove the favorite
+            let deleteRequest = APIRequest(
                 method:       .delete,
                 path:         APIEndpoints.Favorites.delete,
                 queryItems:   [
@@ -129,13 +125,12 @@ final class RemoteSpotRepository: SpotRepositoryProtocol {
                 ],
                 requiresAuth: true
             )
-            try await apiClient.send(request)
+            try await apiClient.send(deleteRequest)
         }
     }
 
     func createSpot(_ draft: SpotDraft) async throws -> Spot {
         guard let userID = await sessionStore.currentUserID else { throw APIError.unauthorized }
-        _ = userID
 
         let payload = CreateSpotPayload(
             name:        draft.name,
@@ -143,8 +138,9 @@ final class RemoteSpotRepository: SpotRepositoryProtocol {
             description: draft.description,
             category:    draft.category.rawValue,
             imageUrl:    draft.imageURLs.first ?? "",
-            latitude:    nil,
-            longitude:   nil
+            latitude:    draft.latitude,
+            longitude:   draft.longitude,
+            creatorId:   userID.uuidString
         )
         var request = APIRequest(
             method:               .post,
@@ -160,8 +156,20 @@ final class RemoteSpotRepository: SpotRepositoryProtocol {
     }
 
     func addPhotosToSpot(spotID: UUID, imageURLs: [String]) async throws {
-        // Stub: image URLs are stored in a `spot_photos` table when backend supports it.
-        // For now, a no-op so the remote mode doesn't crash.
+        struct SpotPhotoPayload: Encodable {
+            let spotId:   String
+            let imageUrl: String
+        }
+        for url in imageURLs {
+            let photoPayload = SpotPhotoPayload(spotId: spotID.uuidString, imageUrl: url)
+            let request = APIRequest(
+                method:       .post,
+                path:         APIEndpoints.SpotPhotos.create,
+                body:         try photoPayload.asJSONData(),
+                requiresAuth: true
+            )
+            try await apiClient.send(request)
+        }
     }
 
     func fetchSpotsByCreator(userId: UUID) async throws -> [Spot] {

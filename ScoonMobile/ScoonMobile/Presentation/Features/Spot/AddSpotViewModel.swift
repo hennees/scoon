@@ -13,6 +13,8 @@ final class AddSpotViewModel {
     var description:    String      = ""
     var category:       SpotCategory = .nature
     var selectedImages: [UIImage]   = []
+    var latitude:       Double?     = nil
+    var longitude:      Double?     = nil
 
     private(set) var isLoading:   Bool    = false
     private(set) var error:       String? = nil
@@ -54,7 +56,9 @@ final class AddSpotViewModel {
                 location:    location.trimmingCharacters(in: .whitespaces),
                 description: description.trimmingCharacters(in: .whitespaces),
                 category:    category,
-                imageURLs:   imageURLs
+                imageURLs:   imageURLs,
+                latitude:    latitude,
+                longitude:   longitude
             )
             createdSpot = try await createSpot.execute(draft)
             isSuccess = true

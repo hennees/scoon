@@ -1,14 +1,28 @@
 import SwiftUI
+import CoreLocation
 
 struct SettingsScreen: View {
     @Environment(AppRouter.self)    private var router
     @Environment(AppContainer.self) private var container
 
-    @AppStorage("isDarkMode") private var darkModeEnabled: Bool = true
+    @AppStorage("isDarkMode")             private var darkModeEnabled:      Bool = true
+    @AppStorage("analytics_tracking_enabled") private var trackingEnabled:  Bool = true
     @State private var liveLocation       = true
     @State private var vm: AuthViewModel?
-    @State private var showSignOutConfirm = false
-    @State private var isCreator: Bool    = false
+    @State private var showSignOutConfirm  = false
+    @State private var isCreator: Bool     = false
+    @State private var showLanguageDialog  = false
+    @State private var locationStatus: CLAuthorizationStatus = .notDetermined
+
+    private var locationStatusLabel: String {
+        switch locationStatus {
+        case .authorizedAlways:  return "Immer"
+        case .authorizedWhenInUse: return "Während der Nutzung"
+        case .denied:            return "Verweigert"
+        case .restricted:        return "Eingeschränkt"
+        default:                 return "Nicht festgelegt"
+        }
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -37,13 +51,25 @@ struct SettingsScreen: View {
                                     title: "Profil") { router.navigate(to: .profile) }
                         SettingsDividerLine()
                         SettingsRow(icon: "globe", iconBg: Color(red: 0.3, green: 0.7, blue: 0.4),
-                                    title: "Sprache") {}
+                                    title: "Sprache") { showLanguageDialog = true }
                         SettingsDividerLine()
-                        SettingsRow(icon: "location.fill", iconBg: Color(red: 0.0, green: 0.6, blue: 0.9),
-                                    title: "Standort") {}
+                        SettingsRow(
+                            icon: "location.fill",
+                            iconBg: Color(red: 0.0, green: 0.6, blue: 0.9),
+                            title: "Standort",
+                            subtitle: locationStatusLabel
+                        ) {
+                            if let url = URL(string: UIApplication.openSettingsURLString) {
+                                UIApplication.shared.open(url)
+                            }
+                        }
                         SettingsDividerLine()
-                        SettingsRow(icon: "chart.bar.fill", iconBg: Color(red: 0.55, green: 0.35, blue: 0.9),
-                                    title: "Tracking & Analytics") {}
+                        SettingsToggleRow(
+                            icon: "chart.bar.fill",
+                            iconBg: Color(red: 0.55, green: 0.35, blue: 0.9),
+                            title: "Tracking & Analytics",
+                            isOn: $trackingEnabled
+                        )
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
@@ -148,7 +174,24 @@ struct SettingsScreen: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
-        .onAppear { if vm == nil { vm = container.makeAuthViewModel() } }
+        .onAppear {
+            if vm == nil { vm = container.makeAuthViewModel() }
+            locationStatus = CLLocationManager().authorizationStatus
+        }
+        .confirmationDialog(
+            "Sprache ändern",
+            isPresented: $showLanguageDialog,
+            titleVisibility: .visible
+        ) {
+            Button("In den iOS-Einstellungen öffnen") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text("Die App-Sprache kann in den iOS-Einstellungen geändert werden.")
+        }
         .task {
             if let user = try? await container.userRepository.fetchCurrentUser() {
                 isCreator = user.isCreator
@@ -216,6 +259,7 @@ private struct SettingsRow: View {
     let icon: String
     let iconBg: Color
     let title: String
+    var subtitle: String? = nil
     var hasExternalLink: Bool = false
     let action: () -> Void
 
@@ -230,9 +274,16 @@ private struct SettingsRow: View {
                         .font(.system(size: 15))
                         .foregroundColor(.white)
                 }
-                Text(title)
-                    .font(.system(size: 16))
-                    .foregroundColor(.primary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 16))
+                        .foregroundColor(.primary)
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.system(size: 12))
+                            .foregroundColor(Color.scoonTextSecondary)
+                    }
+                }
                 Spacer()
                 Image(systemName: hasExternalLink ? "arrow.up.right" : "chevron.right")
                     .font(.system(size: 13, weight: .medium))

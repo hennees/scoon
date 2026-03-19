@@ -1,9 +1,11 @@
 import SwiftUI
+import PhotosUI
 
 struct ProfileScreen: View {
     @Environment(AppRouter.self)    private var router
     @Environment(AppContainer.self) private var container
     @State private var vm: ProfileViewModel?
+    @State private var avatarPickerItem: PhotosPickerItem?
 
     private let gridColumns = [
         GridItem(.flexible(), spacing: 2),
@@ -83,15 +85,22 @@ struct ProfileScreen: View {
                                         )
 
                                     // Camera badge
-                                    Circle()
-                                        .fill(Color.scoonOrange)
-                                        .frame(width: 26, height: 26)
-                                        .overlay(
-                                            Image(systemName: "camera.fill")
-                                                .font(.system(size: 10))
-                                                .foregroundColor(.white)
-                                        )
-                                        .offset(x: 2, y: 2)
+                                    PhotosPicker(
+                                        selection: $avatarPickerItem,
+                                        matching: .images,
+                                        photoLibrary: .shared()
+                                    ) {
+                                        Circle()
+                                            .fill(Color.scoonOrange)
+                                            .frame(width: 26, height: 26)
+                                            .overlay(
+                                                Image(systemName: "camera.fill")
+                                                    .font(.system(size: 10))
+                                                    .foregroundColor(.white)
+                                            )
+                                            .shadow(color: Color.scoonOrange.opacity(0.5), radius: 4, x: 0, y: 2)
+                                    }
+                                    .offset(x: 2, y: 2)
                                 }
                                 .padding(.bottom, -44)
                             }
@@ -258,6 +267,11 @@ struct ProfileScreen: View {
             let viewModel = container.makeProfileViewModel()
             vm = viewModel
             await viewModel.onAppear()
+        }
+        .onChange(of: avatarPickerItem) { _, item in
+            guard item != nil, let user = vm?.user else { return }
+            router.navigate(to: .editProfile(user))
+            avatarPickerItem = nil
         }
     }
 }

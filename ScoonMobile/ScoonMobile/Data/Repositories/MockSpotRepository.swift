@@ -76,7 +76,7 @@ final class MockSpotRepository: SpotRepositoryProtocol {
             isFavorite: false, description: draft.description,
             viewCount: 0, likeCount: 0, saveCount: 0,
             distance: nil, category: draft.category,
-            latitude: nil, longitude: nil,
+            latitude: draft.latitude, longitude: draft.longitude,
             creatorId: MockSpotRepository.mockUserID
         )
         spots.append(newSpot)

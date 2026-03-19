@@ -208,7 +208,11 @@ struct AddPhotoSpotScreen: View {
                         }
 
                         // ── Submit ───────────────────────────────────────
-                        Button(action: { Task { await vm.submit() } }) {
+                        Button(action: {
+                            vm.latitude  = region.center.latitude
+                            vm.longitude = region.center.longitude
+                            Task { await vm.submit() }
+                        }) {
                             ZStack {
                                 LinearGradient(
                                     colors: [

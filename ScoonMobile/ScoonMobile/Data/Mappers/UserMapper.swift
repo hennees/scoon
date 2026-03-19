@@ -5,7 +5,7 @@ enum UserMapper {
         User(
             id:             UUID(uuidString: dto.id) ?? UUID(),
             username:       dto.username,
-            email:          dto.email,
+            email:          dto.email ?? "",
             bio:            dto.bio,
             avatarURL:      dto.avatarUrl,
             postCount:      dto.postCount,

@@ -107,9 +107,10 @@ struct SignUpFormScreen: View {
                         .padding(.top, 28)
 
                         // Terms
-                        Text("Mit der Registrierung stimmst du unseren Nutzungsbedingungen und der Datenschutzerklärung zu.")
+                        Text("Mit der Registrierung stimmst du unseren [Nutzungsbedingungen](https://scoon.at/terms) und der [Datenschutz](https://scoon.at/privacy)erklärung zu.")
                             .font(.system(size: 12))
                             .foregroundColor(.white.opacity(0.3))
+                            .tint(Color.scoonOrange.opacity(0.7))
                             .multilineTextAlignment(.center)
                             .padding(.top, 14)
 

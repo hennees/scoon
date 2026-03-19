@@ -46,4 +46,9 @@ enum APIEndpoints {
         /// GET ?creator_id=eq.{uid}&order=created_at.desc
         static let transactions = "/rest/v1/transactions"
     }
+
+    enum SpotPhotos {
+        /// POST – add a photo URL to a spot
+        static let create = "/rest/v1/spot_photos"
+    }
 }

@@ -54,12 +54,39 @@ final class RemoteUserRepository: UserRepositoryProtocol {
     }
 
     func updateProfile(userID: UUID, username: String, bio: String, avatarURL: String?) async throws -> User {
-        // Stub: PATCH /users when backend supports profile editing
-        throw APIError.serverError(statusCode: 501)
+        struct ProfileUpdatePayload: Encodable {
+            let username:  String
+            let bio:       String
+            let avatarUrl: String?
+        }
+        let payload = ProfileUpdatePayload(username: username, bio: bio, avatarUrl: avatarURL)
+        let request = APIRequest(
+            method:               .patch,
+            path:                 APIEndpoints.Users.me,
+            queryItems:           [URLQueryItem(name: "id", value: "eq.\(userID.uuidString)")],
+            body:                 try payload.asJSONData(),
+            requiresAuth:         true,
+            preferRepresentation: true
+        )
+        let dtos = try await apiClient.send(request, as: [UserDTO].self)
+        guard let dto = dtos.first else { throw APIError.notFound }
+        return UserMapper.map(dto)
     }
 
     func requestCreatorAccess() async throws -> User {
-        // Stub: POST /creator-requests when backend supports creator applications
-        throw APIError.serverError(statusCode: 501)
+        guard let userID = await sessionStore.currentUserID else { throw APIError.unauthorized }
+        struct CreatorUpdate: Encodable { let isCreator: Bool }
+        let payload = CreatorUpdate(isCreator: true)
+        let request = APIRequest(
+            method:               .patch,
+            path:                 APIEndpoints.Users.me,
+            queryItems:           [URLQueryItem(name: "id", value: "eq.\(userID.uuidString)")],
+            body:                 try payload.asJSONData(),
+            requiresAuth:         true,
+            preferRepresentation: true
+        )
+        let dtos = try await apiClient.send(request, as: [UserDTO].self)
+        guard let dto = dtos.first else { throw APIError.notFound }
+        return UserMapper.map(dto)
     }
 }

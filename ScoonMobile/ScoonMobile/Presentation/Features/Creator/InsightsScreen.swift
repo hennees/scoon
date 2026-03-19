@@ -35,23 +35,32 @@ struct InsightsScreen: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 56)
 
-                    // ── Period pill ───────────────────────────────────
-                    HStack(spacing: 8) {
-                        Text("letzten 30 Tage")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(Color.scoonOrange)
-                            .padding(.horizontal, 14).padding(.vertical, 7)
-                            .background(Color.scoonOrange.opacity(0.1))
-                            .clipShape(Capsule())
-                            .overlay(
-                                Capsule().stroke(Color.scoonOrange.opacity(0.35), lineWidth: 1)
-                            )
-                        Text("17. Feb – 17. Mär 2026")
-                            .font(.system(size: 12))
-                            .foregroundColor(Color.scoonTextSecondary)
+                    // ── Period picker ─────────────────────────────────
+                    if let vm {
+                        HStack(spacing: 6) {
+                            ForEach(InsightsPeriod.allCases, id: \.self) { period in
+                                Button(action: { vm.selectPeriod(period) }) {
+                                    Text(period.rawValue)
+                                        .font(.system(size: 13, weight: vm.selectedPeriod == period ? .semibold : .regular))
+                                        .foregroundColor(vm.selectedPeriod == period ? Color.scoonOrange : Color.scoonTextSecondary)
+                                        .padding(.horizontal, 14).padding(.vertical, 7)
+                                        .background(vm.selectedPeriod == period ? Color.scoonOrange.opacity(0.1) : Color.primary.opacity(0.05))
+                                        .clipShape(Capsule())
+                                        .overlay(
+                                            Capsule().stroke(
+                                                vm.selectedPeriod == period ? Color.scoonOrange.opacity(0.35) : Color.primary.opacity(0.08),
+                                                lineWidth: 1
+                                            )
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                                .animation(.spring(response: 0.25, dampingFraction: 0.7), value: vm.selectedPeriod)
+                            }
+                            Spacer()
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
 
                     if let vm {
                         if vm.isLoading {

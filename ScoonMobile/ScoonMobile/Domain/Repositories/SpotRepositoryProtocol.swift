@@ -17,4 +17,6 @@ struct SpotDraft {
     let description: String
     let category:    SpotCategory
     let imageURLs:   [String]
+    let latitude:    Double?
+    let longitude:   Double?
 }

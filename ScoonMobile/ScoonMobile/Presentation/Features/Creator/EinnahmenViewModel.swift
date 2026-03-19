@@ -8,10 +8,21 @@ final class EinnahmenViewModel {
     private(set) var isLoading:     Bool          = false
     private(set) var error:         String?
 
+    var statusFilter: TransactionStatus? = nil
+
+    var filteredTransactions: [Transaction] {
+        guard let filter = statusFilter else { return transactions }
+        return transactions.filter { $0.status == filter }
+    }
+
     private let fetchTransactions: FetchTransactionsUseCase
 
     init(fetchTransactions: FetchTransactionsUseCase) {
         self.fetchTransactions = fetchTransactions
+    }
+
+    var pendingTransactions: [Transaction] {
+        transactions.filter { $0.status == .pending }
     }
 
     func onAppear() async {

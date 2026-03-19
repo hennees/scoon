@@ -10,10 +10,18 @@ struct Transaction: Identifiable, Hashable {
     let date:     Date
 }
 
-enum TransactionStatus: String, Hashable {
-    case paid    = "BEZAHLT"
-    case pending = "AUSSTEHEND"
-    case failed  = "FEHLGESCHLAGEN"
+enum TransactionStatus: String, Hashable, CaseIterable {
+    case paid    = "paid"
+    case pending = "pending"
+    case failed  = "failed"
+
+    var displayLabel: String {
+        switch self {
+        case .paid:    return "Bezahlt"
+        case .pending: return "Ausstehend"
+        case .failed:  return "Fehlgeschlagen"
+        }
+    }
 
     var displayColor: String {
         switch self {

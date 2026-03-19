@@ -1,5 +1,11 @@
 import Foundation
 
+enum InsightsPeriod: String, CaseIterable {
+    case week    = "7 Tage"
+    case month   = "30 Tage"
+    case quarter = "90 Tage"
+}
+
 @Observable
 @MainActor
 final class InsightsViewModel {
@@ -7,6 +13,8 @@ final class InsightsViewModel {
     private(set) var topSpots:   [Spot]   = []
     private(set) var isLoading:  Bool     = false
     private(set) var error:      String?
+
+    var selectedPeriod: InsightsPeriod = .month
 
     private let fetchInsights: FetchInsightsUseCase
     private let fetchProfile:  FetchUserProfileUseCase
@@ -18,6 +26,16 @@ final class InsightsViewModel {
 
     func onAppear() async {
         guard summary == nil else { return }
+        await load()
+    }
+
+    func selectPeriod(_ period: InsightsPeriod) {
+        selectedPeriod = period
+        summary = nil
+        Task { await load() }
+    }
+
+    private func load() async {
         isLoading = true
         error = nil
         do {
