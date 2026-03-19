@@ -76,7 +76,7 @@ struct AddPhotoToSpotScreen: View {
                                     .font(.system(size: 17, weight: .bold))
                                     .foregroundColor(.white)
                                 HStack(spacing: 5) {
-                                    Image(systemName: "mappin.fill")
+                                    Image(systemName: "mappin")
                                         .font(.system(size: 10))
                                         .foregroundColor(.scoonOrange)
                                     Text(spot.location)

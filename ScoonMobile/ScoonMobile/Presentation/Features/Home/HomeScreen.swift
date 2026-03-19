@@ -5,8 +5,9 @@ struct HomeScreen: View {
     @Environment(AppRouter.self)    private var router
     @Environment(AppContainer.self) private var container
     @State private var vm:       HomeViewModel?
-    @State private var appeared  = false
-    @State private var cityName  = "Graz · Österreich"
+    @State private var appeared           = false
+    @State private var cityName           = "Graz · Österreich"
+    @State private var showNotifications  = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -38,7 +39,7 @@ struct HomeScreen: View {
                             }
                         }
                         Spacer()
-                        Button(action: {}) {
+                        Button(action: { showNotifications = true }) {
                             ZStack {
                                 Circle()
                                     .fill(Color.primary.opacity(0.08))
@@ -101,8 +102,10 @@ struct HomeScreen: View {
                     }
 
                     // ── Section header ────────────────────────────────
-                    SectionHeader(title: "Beliebte Spots", onSeeAll: {})
-                        .padding(.top, 28)
+                    SectionHeader(title: "Beliebte Spots", onSeeAll: {
+                        router.navigate(to: .spotList(filter: .topRated))
+                    })
+                    .padding(.top, 28)
                         .opacity(appeared ? 1 : 0)
                         .animation(.easeOut(duration: 0.4).delay(0.25), value: appeared)
 
@@ -143,8 +146,10 @@ struct HomeScreen: View {
 
                             // ── Nearby section ────────────────────────
                             if vm.filteredSpots.count > 2 {
-                                SectionHeader(title: "In deiner Nähe", onSeeAll: {})
-                                    .padding(.top, 28)
+                                SectionHeader(title: "In deiner Nähe", onSeeAll: {
+                                    router.navigate(to: .spotList(filter: .newlyFound))
+                                })
+                                .padding(.top, 28)
                                     .opacity(appeared ? 1 : 0)
                                     .animation(.easeOut(duration: 0.4).delay(0.4), value: appeared)
 
@@ -188,6 +193,11 @@ struct HomeScreen: View {
             vm = viewModel
             appeared = true
             await viewModel.onAppear()
+        }
+        .alert("Benachrichtigungen", isPresented: $showNotifications) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Keine neuen Benachrichtigungen")
         }
         .onReceive(NotificationCenter.default.publisher(for: .mapCitySelected)) { notification in
             guard let info = notification.userInfo,
@@ -366,7 +376,7 @@ private struct SpotCardView: View {
                         .foregroundColor(.white)
                         .lineLimit(1)
                     HStack(spacing: 5) {
-                        Image(systemName: "mappin.fill")
+                        Image(systemName: "mappin")
                             .font(.system(size: 10))
                             .foregroundColor(Color.scoonOrange)
                         Text(spot.location)
@@ -442,7 +452,7 @@ private struct NearbySpotRow: View {
                         .foregroundColor(.primary)
                         .lineLimit(1)
                     HStack(spacing: 4) {
-                        Image(systemName: "mappin.fill")
+                        Image(systemName: "mappin")
                             .font(.system(size: 10))
                             .foregroundColor(Color.scoonOrange)
                         Text(spot.location)

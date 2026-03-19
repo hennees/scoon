@@ -38,13 +38,21 @@ final class FavoritesViewModel {
     }
 
     func toggle(spot: Spot) {
+        flipLocally(spotID: spot.id)
         Task {
             do {
                 try await toggleFavorite.execute(spotID: spot.id)
                 await load()
             } catch {
+                flipLocally(spotID: spot.id) // revert
                 self.error = error.localizedDescription
             }
+        }
+    }
+
+    private func flipLocally(spotID: UUID) {
+        if let i = favorites.firstIndex(where: { $0.id == spotID }) {
+            favorites[i].isFavorite.toggle()
         }
     }
 

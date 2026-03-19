@@ -122,7 +122,7 @@ struct PlaceInfoScreen: View {
                         .font(.system(size: 26, weight: .bold))
                         .foregroundColor(.primary)
                     HStack(spacing: 5) {
-                        Image(systemName: "mappin.fill")
+                        Image(systemName: "mappin")
                             .font(.system(size: 10))
                             .foregroundColor(.scoonOrange)
                         Text(spot.location)

@@ -294,7 +294,7 @@ private struct FavoriteSpotRow: View {
                     .lineLimit(1)
 
                 HStack(spacing: 4) {
-                    Image(systemName: "mappin.fill")
+                    Image(systemName: "mappin")
                         .font(.system(size: 10))
                         .foregroundColor(Color.scoonOrange)
                     Text(spot.location)
